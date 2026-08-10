@@ -9,7 +9,7 @@ import { fmtIDR, fmtPct, genreClass, heatClass } from "@/lib/format";
 const GENRE_SLOTS = ["10:30", "13:00", "16:00", "19:00", "21:30"];
 
 export default function OptimizerPage() {
-  const { data, loading, error, alerts } = useDashboard();
+  const { data, loading, error, alerts, cms } = useDashboard();
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
@@ -19,6 +19,16 @@ export default function OptimizerPage() {
   const insightAlerts = alerts
     .filter((a) => /showtime|okupansi|Under-utilised|Permintaan/i.test(a.title + a.detail))
     .slice(0, 3);
+  const assetByTitle = new Map(
+    cms.assets.map((a) => [a.title.toLowerCase(), a] as const)
+  );
+  const schedule = [...cms.shows]
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+    .slice(0, 10);
+  const seatCapacity = cms.screens.reduce(
+    (n, sc) => n + (sc.rows || 0) * (sc.cols || 0),
+    0
+  );
 
   return (
     <div>
@@ -27,9 +37,14 @@ export default function OptimizerPage() {
         subtitle="Pola okupansi dari cms.shows + kursi terjual."
       />
       {error ? <ErrorState message={error} /> : null}
-      <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
-        ℹ <span>
-          Keputusan dihitung dari jadwal dan booking di <b className="text-[#5e4106]">indobox-cms</b>.
+      {cms.error ? <ErrorState message={cms.error} /> : null}
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
+        ℹ{" "}
+        <span>
+          Heatmap dari summary · jadwal/assets/screens dari endpoint CMS admin.
+        </span>
+        <span className="ml-auto text-xs font-bold text-[#5e4106]">
+          {cms.screens.length} screen · {seatCapacity} seats · {cms.assets.length} feature assets
         </span>
       </div>
 
@@ -151,21 +166,96 @@ export default function OptimizerPage() {
         </Panel>
         <Panel>
           <h2 className="m-0 text-base">Ranking film</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">Urut admissions</p>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            Summary + enrich /assets
+          </p>
           {data.films?.length ? (
             <div className="grid gap-2.5">
-              {data.films.map((f) => (
-                <div key={f.title} className="rounded-[9px] border border-[var(--line)] p-3">
-                  <b className="block">{f.title}</b>
-                  <small className="text-[var(--muted)]">
-                    Okupansi {fmtPct(f.occupancy_pct, 0)} · RevPASH {fmtIDR(f.revpash)} ·{" "}
-                    {f.admissions} admissions
-                  </small>
+              {data.films.map((f) => {
+                const meta =
+                  assetByTitle.get(f.title.toLowerCase()) ||
+                  assetByTitle.get(f.title.replace(/^Demo:\s*/i, "").toLowerCase());
+                return (
+                  <div key={f.title} className="rounded-[9px] border border-[var(--line)] p-3">
+                    <b className="block">{f.title}</b>
+                    <small className="text-[var(--muted)]">
+                      Okupansi {fmtPct(f.occupancy_pct, 0)} · RevPASH {fmtIDR(f.revpash)} ·{" "}
+                      {f.admissions} admissions
+                      {meta?.genre ? ` · ${meta.genre}` : ""}
+                      {meta?.release_date ? ` · rilis ${meta.release_date}` : ""}
+                    </small>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <Empty>Belum ada film pada periode ini.</Empty>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
+        <Panel>
+          <h2 className="m-0 text-base">Jadwal show CMS</h2>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            GET /v1/admin/shows
+          </p>
+          {schedule.length ? (
+            <div className="grid gap-2">
+              {schedule.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex justify-between gap-3 border-t border-[var(--line)] py-2.5 first:border-t-0 first:pt-0"
+                >
+                  <div>
+                    <b className="block text-[13px]">{s.title || "Untitled"}</b>
+                    <small className="text-[var(--muted)]">
+                      {s.site_name} · {s.screen_name}
+                    </small>
+                  </div>
+                  <span className="text-right text-[11px] text-[var(--muted)]">
+                    {new Date(s.starts_at).toLocaleString("id-ID", {
+                      day: "2-digit",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    <br />
+                    {s.status}
+                  </span>
                 </div>
               ))}
             </div>
           ) : (
-            <Empty>Belum ada film pada periode ini.</Empty>
+            <Empty>Belum ada show untuk filter ini.</Empty>
+          )}
+        </Panel>
+        <Panel>
+          <h2 className="m-0 text-base">Studio / kapasitas</h2>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            GET /v1/admin/screens
+          </p>
+          {cms.screens.length ? (
+            <div className="grid gap-2">
+              {cms.screens.map((sc) => (
+                <div
+                  key={sc.id}
+                  className="flex justify-between gap-2 border-t border-[var(--line)] py-2.5 first:border-t-0 first:pt-0"
+                >
+                  <span>
+                    <b>{sc.name}</b>
+                    <small className="mt-0.5 block text-[var(--muted)]">{sc.site_name}</small>
+                  </span>
+                  <span className="text-xs text-[var(--muted)]">
+                    {(sc.rows || 0) * (sc.cols || 0)} seats
+                    <br />
+                    {sc.rows}×{sc.cols}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>Belum ada screen di CMS.</Empty>
           )}
         </Panel>
       </div>

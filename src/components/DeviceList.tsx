@@ -19,8 +19,16 @@ export function DeviceList({ devices }: { devices: DeviceRow[] }) {
             <b>{d.name}</b>
             <small className="mt-0.5 block text-[var(--muted)]">
               {d.site}
+              {d.hostname ? ` · ${d.hostname}` : ""}
               {d.last_heartbeat_at ? ` · ${relativeTime(d.last_heartbeat_at)}` : ""}
             </small>
+            {d.current_show_title || d.agent_version ? (
+              <small className="mt-0.5 block text-[11px] text-[var(--muted)]">
+                {d.current_show_title ? `Show: ${d.current_show_title}` : null}
+                {d.current_show_title && d.agent_version ? " · " : null}
+                {d.agent_version ? `agent ${d.agent_version}` : null}
+              </small>
+            ) : null}
           </div>
           <span
             className={`h-fit rounded-full px-2 py-1 text-[11px] font-extrabold ${

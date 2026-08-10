@@ -4,8 +4,13 @@ import { useDashboard } from "@/hooks/useDashboardSummary";
 import type { PeriodKey } from "@/lib/types";
 
 export function Filters({ show = true }: { show?: boolean }) {
-  const { data, period, siteId, setPeriod, setSiteId } = useDashboard();
+  const { data, cms, period, siteId, setPeriod, setSiteId } = useDashboard();
   if (!show) return null;
+
+  const sites =
+    cms.sites.length > 0
+      ? cms.sites.filter((s) => s.active !== false)
+      : (data?.sites || []).map((s) => ({ id: s.id, name: s.name, code: s.code }));
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -15,7 +20,7 @@ export function Filters({ show = true }: { show?: boolean }) {
         onChange={(e) => setSiteId(e.target.value)}
       >
         <option value="">Semua Cabang</option>
-        {(data?.sites || []).map((s) => (
+        {sites.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name}
           </option>

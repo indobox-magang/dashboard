@@ -1,3 +1,8 @@
+/**
+ * Dashboard summary types — mirror GET /v1/admin/dashboard/summary.
+ * Semantic notes (CMS-aligned): see docs/DATA-CONTRACT.md and PRD v2.1.
+ */
+
 export type SiteOption = {
   id: number;
   code: string;
@@ -13,11 +18,16 @@ export type Deltas = {
   revpash_pct?: number | null;
 };
 
+/** KPIs from CMS booking + shows. ticket_* is face total today (not full PRD net). */
 export type KPIs = {
   ticket_revenue: number;
+  /** In-app booking_snacks only — not counter/vending. */
   snack_revenue: number;
+  /** ticket_revenue + snack_revenue (current API proxy for “net”). */
   net_revenue: number;
+  /** Sold seats on paid|used bookings (not scanned-only). */
   admissions: number;
+  /** Uses screens.rows * cols as capacity proxy. */
   occupancy_pct: number;
   atp: number;
   fnb_per_admission: number;
@@ -25,6 +35,7 @@ export type KPIs = {
   deltas: Deltas;
 };
 
+/** Mix is ticket vs in-app snack share — no vending/counter split yet. */
 export type Mix = {
   ticket_pct: number;
   snack_pct: number;
@@ -45,16 +56,22 @@ export type BranchRow = {
   change_pct?: number | null;
 };
 
+/** Edge player row from cms.devices — not a vending machine. */
 export type DeviceRow = {
   id: number;
   name: string;
   site: string;
+  /** Heartbeat within ~120s. */
   online: boolean;
   last_heartbeat_at?: string | null;
   playback_status?: string;
   playback_error?: string;
   status_label: string;
   warn: boolean;
+  /** Extra fields when sourced from GET /v1/admin/devices */
+  hostname?: string;
+  current_show_title?: string;
+  agent_version?: string;
 };
 
 export type Heatmap = {
@@ -93,6 +110,7 @@ export type FNBDeltas = {
   basket_pct?: number | null;
 };
 
+/** F&B block = booking-app snacks linked to tickets. */
 export type FNBBlock = {
   revenue: number;
   attach_pct: number;
@@ -112,6 +130,7 @@ export type Alert = {
 };
 
 export type Health = {
+  /** Player fleet online %, not vending uptime. */
   device_online_pct: number;
   devices_offline: number;
   fnb_per_admission: number;
@@ -139,6 +158,7 @@ export type DashboardSummary = {
   fnb: FNBBlock;
   alerts: Alert[];
   health: Health;
+  /** Catalog snacks with available = 0 (not stockout duration). */
   unavailable_snacks: SnackAvail[];
 };
 

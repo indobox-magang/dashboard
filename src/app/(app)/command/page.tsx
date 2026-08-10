@@ -3,8 +3,9 @@
 import { ActionNeededPanel, ErrorState, LoadingState } from "@/components/Alerts";
 import { DeviceList } from "@/components/DeviceList";
 import { PageHead } from "@/components/Filters";
-import { Leaderboard, Panel } from "@/components/Leaderboard";
+import { Empty, Leaderboard, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
+import { deviceHealth, mapDeviceToRow } from "@/lib/cms";
 import { conic, fmtDelta, fmtIDR, fmtPct, periodLabel } from "@/lib/format";
 
 function Spark({ down }: { down: boolean }) {
@@ -22,11 +23,21 @@ function Spark({ down }: { down: boolean }) {
 }
 
 export default function CommandPage() {
-  const { data, loading, error, period } = useDashboard();
+  const { data, loading, error, period, cms } = useDashboard();
 
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
+
+  const deviceRows = cms.devices.length
+    ? cms.devices.map(mapDeviceToRow)
+    : data.devices || [];
+  const health = deviceHealth(cms.devices);
+  const upcomingShows = [...cms.shows]
+    .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
+    .slice(0, 6);
+  const recentBookings = cms.bookings.slice(0, 6);
+  const paidBookings = cms.bookings.filter((b) => b.status === "paid" || b.status === "used");
 
   const k = data.kpis;
   const deltas = [
@@ -57,7 +68,8 @@ export default function CommandPage() {
         subtitle="Prioritas bisnis dari data live indobox-cms."
       />
       {error ? <ErrorState message={error} /> : null}
-      <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
+      {cms.error ? <ErrorState message={cms.error} /> : null}
+      <div className="mb-5 flex flex-wrap items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
         {highAlerts ? (
           <span>
             ⚠ <b className="text-[#5e4106]">{highAlerts} alert berdampak tinggi</b> dari CMS
@@ -65,10 +77,14 @@ export default function CommandPage() {
           </span>
         ) : (
           <span>
-            ℹ Data diambil langsung dari <b className="text-[#5e4106]">indobox-cms</b> (tiket, snack
-            booking, jadwal, device player).
+            ℹ KPI dari summary · katalog live dari{" "}
+            <b className="text-[#5e4106]">/sites · /devices · /shows · /bookings</b>
           </span>
         )}
+        <span className="ml-auto text-xs font-bold text-[#5e4106]">
+          Player {health.onlineN}/{health.total || deviceRows.length} online ·{" "}
+          {paidBookings.length} booking paid/used
+        </span>
       </div>
 
       <div className="grid grid-cols-6 gap-3 max-[1100px]:grid-cols-3 max-[720px]:grid-cols-2">
@@ -168,18 +184,86 @@ export default function CommandPage() {
 
       <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
+          <h2 className="m-0 text-base">Jadwal show (CMS)</h2>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            GET /v1/admin/shows
+          </p>
+          {upcomingShows.length ? (
+            <div className="grid gap-2">
+              {upcomingShows.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex justify-between gap-3 border-t border-[var(--line)] py-2.5 first:border-t-0 first:pt-0"
+                >
+                  <div>
+                    <b className="block text-[13px]">{s.title || "Untitled"}</b>
+                    <small className="text-[var(--muted)]">
+                      {s.site_name} · {s.screen_name}
+                    </small>
+                  </div>
+                  <span className="shrink-0 text-right text-[11px] text-[var(--muted)]">
+                    {new Date(s.starts_at).toLocaleString("id-ID", {
+                      day: "2-digit",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    <br />
+                    {s.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>Belum ada show di CMS untuk filter ini.</Empty>
+          )}
+        </Panel>
+        <Panel>
+          <h2 className="m-0 text-base">Booking terbaru</h2>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            GET /v1/admin/bookings
+          </p>
+          {recentBookings.length ? (
+            <div className="grid gap-2">
+              {recentBookings.map((b) => (
+                <div
+                  key={b.id}
+                  className="flex justify-between gap-3 border-t border-[var(--line)] py-2.5 first:border-t-0 first:pt-0"
+                >
+                  <div>
+                    <b className="block text-[13px]">{b.code}</b>
+                    <small className="text-[var(--muted)]">
+                      {b.movie_title || "—"} · {b.user_name}
+                    </small>
+                  </div>
+                  <span className="shrink-0 text-right text-[11px]">
+                    <b>{fmtIDR(b.total, true)}</b>
+                    <br />
+                    <span className="text-[var(--muted)]">{b.status}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty>Belum ada booking di CMS.</Empty>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
+        <Panel>
           <h2 className="m-0 text-base">Performa cabang</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Dari sites + bookings CMS
+            Dari dashboard summary
           </p>
           <Leaderboard rows={data.branches || []} />
         </Panel>
         <Panel>
           <h2 className="m-0 text-base">Device player</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Status heartbeat dari CMS
+            GET /v1/admin/devices
           </p>
-          <DeviceList devices={data.devices || []} />
+          <DeviceList devices={deviceRows} />
         </Panel>
       </div>
     </div>

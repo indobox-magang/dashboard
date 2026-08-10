@@ -5,39 +5,63 @@ import { DeviceList } from "@/components/DeviceList";
 import { PageHead } from "@/components/Filters";
 import { Empty, Leaderboard, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
+import { deviceHealth, mapDeviceToRow } from "@/lib/cms";
 import { fmtIDR, fmtPct } from "@/lib/format";
 
 export default function OperationsPage() {
-  const { data, loading, error, alerts } = useDashboard();
+  const { data, loading, error, alerts, cms } = useDashboard();
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
 
-  const h = data.health;
+  const deviceRows = cms.devices.length
+    ? cms.devices.map(mapDeviceToRow)
+    : data.devices || [];
+  const health = cms.devices.length
+    ? deviceHealth(cms.devices)
+    : {
+        onlinePct: data.health.device_online_pct,
+        offline: data.health.devices_offline,
+        onlineN: 0,
+        total: data.devices?.length || 0,
+      };
+  const snacks = cms.snacks;
+  const unavailable = snacks.filter((s) => s.available === 0);
+  const seatCapacity = cms.screens.reduce(
+    (n, sc) => n + (sc.rows || 0) * (sc.cols || 0),
+    0
+  );
 
   return (
     <div>
       <PageHead
         title="Operasional"
-        subtitle="Efisiensi cabang, device player, dan ketersediaan snack katalog."
+        subtitle="Efisiensi cabang, device player, dan katalog snack CMS."
       />
       {error ? <ErrorState message={error} /> : null}
+      {cms.error ? <ErrorState message={cms.error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
         <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
           <span className="text-xs font-semibold text-[var(--muted)]">Device online</span>
-          <b className="mt-1.5 block text-2xl">{fmtPct(h.device_online_pct, 0)}</b>
-          <span className={`text-xs font-bold ${h.devices_offline ? "text-[var(--red)]" : "text-[#078168]"}`}>
-            {h.devices_offline || 0} offline
+          <b className="mt-1.5 block text-2xl">{fmtPct(health.onlinePct, 0)}</b>
+          <span
+            className={`text-xs font-bold ${
+              health.offline ? "text-[var(--red)]" : "text-[#078168]"
+            }`}
+          >
+            {health.offline || 0} offline · dari /devices
           </span>
         </div>
         <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
-          <span className="text-xs font-semibold text-[var(--muted)]">Device offline</span>
-          <b className="mt-1.5 block text-2xl">{h.devices_offline || 0}</b>
-          <span className="text-xs text-[var(--muted)]">Butuh pengecekan</span>
+          <span className="text-xs font-semibold text-[var(--muted)]">Kapasitas studio</span>
+          <b className="mt-1.5 block text-2xl">{seatCapacity.toLocaleString("id-ID")}</b>
+          <span className="text-xs text-[var(--muted)]">
+            {cms.screens.length} screen · /screens
+          </span>
         </div>
         <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
           <span className="text-xs font-semibold text-[var(--muted)]">F&B spend / admission</span>
-          <b className="mt-1.5 block text-2xl">{fmtIDR(h.fnb_per_admission)}</b>
+          <b className="mt-1.5 block text-2xl">{fmtIDR(data.health.fnb_per_admission)}</b>
         </div>
       </div>
 
@@ -45,16 +69,16 @@ export default function OperationsPage() {
         <Panel>
           <h2 className="m-0 text-base">Branch leaderboard</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Peringkat berdasarkan pendapatan
+            Peringkat dari dashboard summary
           </p>
           <Leaderboard rows={data.branches || []} />
         </Panel>
         <Panel>
           <h2 className="m-0 text-base">Device tracker</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Player edge (bukan vending)
+            Player edge · GET /v1/admin/devices
           </p>
-          <DeviceList devices={data.devices || []} />
+          <DeviceList devices={deviceRows} />
         </Panel>
       </div>
 
@@ -62,23 +86,38 @@ export default function OperationsPage() {
         <Panel>
           <h2 className="m-0 text-base">Snack katalog</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Item dengan available = 0 di CMS
+            GET /v1/admin/snacks · {unavailable.length} unavailable
           </p>
-          {data.unavailable_snacks?.length ? (
+          {snacks.length ? (
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
                   <th className="pb-2.5 text-left text-[11px] text-[var(--muted)]">Produk</th>
+                  <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Harga</th>
                   <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {data.unavailable_snacks.map((s) => (
+                {snacks.map((s) => (
                   <tr key={s.id}>
-                    <td className="border-t border-[var(--line)] py-3">{s.name}</td>
+                    <td className="border-t border-[var(--line)] py-3">
+                      {s.name}
+                      {s.size ? (
+                        <small className="ml-1 text-[var(--muted)]">({s.size})</small>
+                      ) : null}
+                    </td>
                     <td className="border-t border-[var(--line)] py-3 text-right">
-                      <span className="rounded-full bg-[#fff0d2] px-2 py-1 text-[11px] font-extrabold text-[#985a02]">
-                        Unavailable
+                      {fmtIDR(s.price)}
+                    </td>
+                    <td className="border-t border-[var(--line)] py-3 text-right">
+                      <span
+                        className={`rounded-full px-2 py-1 text-[11px] font-extrabold ${
+                          s.available
+                            ? "bg-[#e3f7ef] text-[#08745d]"
+                            : "bg-[#fff0d2] text-[#985a02]"
+                        }`}
+                      >
+                        {s.available ? "Available" : "Unavailable"}
                       </span>
                     </td>
                   </tr>
@@ -86,7 +125,7 @@ export default function OperationsPage() {
               </tbody>
             </table>
           ) : (
-            <Empty>Semua snack katalog berstatus tersedia.</Empty>
+            <Empty>Katalog snack kosong atau /snacks gagal dimuat.</Empty>
           )}
         </Panel>
         <Panel>

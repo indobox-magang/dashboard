@@ -9,7 +9,7 @@ import { conic, fmtDelta, fmtIDR, fmtPct } from "@/lib/format";
 const COLORS = ["#276ef1", "#61c5b0", "#f1b64d", "#7656d6", "#c1d3fa"];
 
 export default function FnbPage() {
-  const { data, loading, error } = useDashboard();
+  const { data, loading, error, cms } = useDashboard();
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
@@ -25,6 +25,9 @@ export default function FnbPage() {
     ["Attach rate", fmtPct(f.attach_pct), fmtDelta(f.deltas?.attach_pts, true)],
     ["Basket rata-rata pembeli", fmtIDR(f.basket), fmtDelta(f.deltas?.basket_pct)],
   ] as const;
+  const recentPaid = cms.bookings
+    .filter((b) => b.status === "paid" || b.status === "used")
+    .slice(0, 8);
 
   return (
     <div>
@@ -33,6 +36,7 @@ export default function FnbPage() {
         subtitle="Snack dari booking app (booking_snacks), bukan vending machine."
       />
       {error ? <ErrorState message={error} /> : null}
+      {cms.error ? <ErrorState message={cms.error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
         {summary.map((s) => (
           <div key={s[0]} className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
@@ -213,26 +217,69 @@ export default function FnbPage() {
           )}
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base">Catatan F&B</h2>
+          <h2 className="m-0 text-base">Katalog snack CMS</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Sumber: booking_snacks CMS
+            GET /v1/admin/snacks
           </p>
-          <div className="grid gap-2.5">
-            <div className="rounded-[9px] border border-[var(--line)] p-3">
-              <b className="block">Attach rate berbasis transaksi</b>
-              <small className="text-[var(--muted)]">
-                Dihitung dari booking berstatus paid/used yang punya baris snack.
-              </small>
+          {cms.snacks.length ? (
+            <div className="grid gap-2">
+              {cms.snacks.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between gap-2 border-t border-[var(--line)] py-2 first:border-t-0 first:pt-0"
+                >
+                  <span>
+                    {s.name}
+                    <small className="ml-1 text-[var(--muted)]">
+                      {s.available ? "available" : "unavailable"}
+                    </small>
+                  </span>
+                  <b className="text-xs">{fmtIDR(s.price)}</b>
+                </div>
+              ))}
             </div>
-            <div className="rounded-[9px] border border-[var(--line)] p-3">
-              <b className="block">Bukan penjualan vending</b>
-              <small className="text-[var(--muted)]">
-                Metrik ini hanya mencakup snack yang dipesan lewat aplikasi booking.
-              </small>
-            </div>
-          </div>
+          ) : (
+            <Empty>Katalog snack belum termuat.</Empty>
+          )}
         </Panel>
       </div>
+
+      <Panel className="mt-4">
+        <h2 className="m-0 text-base">Booking paid/used terbaru</h2>
+        <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+          GET /v1/admin/bookings · sample untuk konteks F&B
+        </p>
+        {recentPaid.length ? (
+          <table className="w-full border-collapse text-[13px]">
+            <thead>
+              <tr>
+                <th className="pb-2.5 text-left text-[11px] text-[var(--muted)]">Kode</th>
+                <th className="pb-2.5 text-left text-[11px] text-[var(--muted)]">Film</th>
+                <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Total</th>
+                <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentPaid.map((b) => (
+                <tr key={b.id}>
+                  <td className="border-t border-[var(--line)] py-2.5">{b.code}</td>
+                  <td className="border-t border-[var(--line)] py-2.5">{b.movie_title || "—"}</td>
+                  <td className="border-t border-[var(--line)] py-2.5 text-right">
+                    {fmtIDR(b.total, true)}
+                  </td>
+                  <td className="border-t border-[var(--line)] py-2.5 text-right">{b.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <Empty>Belum ada booking paid/used.</Empty>
+        )}
+        <p className="mt-4 mb-0 text-xs text-[var(--muted)]">
+          Metrik attach/revenue di atas tetap dari summary (`booking_snacks`); panel ini dari list
+          endpoint CMS.
+        </p>
+      </Panel>
     </div>
   );
 }

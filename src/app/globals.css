@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+:root {
+  --nav: #101b2e;
+  --nav2: #1f3353;
+  --ink: #162338;
+  --muted: #6f7b90;
+  --line: #e7ebf2;
+  --bg: #f5f7fb;
+  --card: #fff;
+  --blue: #276ef1;
+  --mint: #1eaa88;
+  --amber: #c17708;
+  --red: #d34b58;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}

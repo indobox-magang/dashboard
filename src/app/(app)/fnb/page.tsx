@@ -30,7 +30,7 @@ export default function FnbPage() {
     <div>
       <PageHead
         title="F&B Detail"
-        subtitle="Snack dari booking app (booking_snacks), bukan vending machine."
+        subtitle="Snack dari booking.booking_snacks di CMS DB — bukan vending / POS counter."
       />
       {error ? <ErrorState message={error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">

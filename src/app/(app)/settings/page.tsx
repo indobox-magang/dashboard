@@ -19,14 +19,14 @@ export default function SettingsPage() {
     <div>
       <PageHead
         title="Konfigurasi Alert"
-        subtitle="Ambang batas yang dipakai untuk sinyal dari data CMS."
+        subtitle="Ambang batas yang dipakai untuk sinyal dari CMS Postgres."
         controls={false}
       />
       <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
         ⚙{" "}
         <span>
-          Alert dihitung di API dari device offline, snack unavailable, overflow okupansi, dan
-          under-utilised film.
+          Alert dihitung di BFF dari device heartbeat, snack katalog, dan okupansi booking. Vending
+          uptime tidak tersedia.
         </span>
       </div>
 

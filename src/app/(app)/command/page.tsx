@@ -54,19 +54,20 @@ export default function CommandPage() {
     <div>
       <PageHead
         title="Business Command Center"
-        subtitle="Prioritas bisnis dari data live indobox-cms."
+        subtitle={`Prioritas bisnis · data as of ${data.as_of ? new Date(data.as_of).toLocaleString("id-ID") : "—"}`}
       />
       {error ? <ErrorState message={error} /> : null}
       <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
         {highAlerts ? (
           <span>
-            ⚠ <b className="text-[#5e4106]">{highAlerts} alert berdampak tinggi</b> dari CMS
-            membutuhkan respons.
+            ⚠ <b className="text-[#5e4106]">{highAlerts} alert berdampak tinggi</b> membutuhkan
+            respons.
           </span>
         ) : (
           <span>
-            ℹ Data diambil langsung dari <b className="text-[#5e4106]">indobox-cms</b> (tiket, snack
-            booking, jadwal, device player).
+            ℹ KPI langsung dari <b className="text-[#5e4106]">CMS Postgres</b> (
+            <code className="text-[11px]">cms</code> + <code className="text-[11px]">booking</code>
+            ) — DB yang sama dengan admin & booking app.
           </span>
         )}
       </div>

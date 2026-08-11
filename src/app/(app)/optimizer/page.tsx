@@ -28,8 +28,10 @@ export default function OptimizerPage() {
       />
       {error ? <ErrorState message={error} /> : null}
       <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
-        ℹ <span>
-          Keputusan dihitung dari jadwal dan booking di <b className="text-[#5e4106]">indobox-cms</b>.
+        ℹ{" "}
+        <span>
+          Heatmap dari <b className="text-[#5e4106]">cms.shows</b> + kursi terjual di{" "}
+          <code className="text-[11px]">booking</code>. Demografi & vending tidak tersedia.
         </span>
       </div>
 

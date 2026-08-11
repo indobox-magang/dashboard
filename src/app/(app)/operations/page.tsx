@@ -19,7 +19,7 @@ export default function OperationsPage() {
     <div>
       <PageHead
         title="Operasional"
-        subtitle="Efisiensi cabang, device player, dan ketersediaan snack katalog."
+        subtitle="Efisiensi cabang & device dari CMS Postgres. Vending telemetry: unavailable."
       />
       {error ? <ErrorState message={error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">

@@ -76,7 +76,11 @@ export default function LoginPage() {
           {busy ? "Masuk…" : "Masuk"}
         </button>
         <p className="m-0 text-[11px] text-[var(--muted)]">
-          API: {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}
+          Login CMS:{" "}
+          {process.env.NEXT_PUBLIC_CMS_API_URL ||
+            process.env.NEXT_PUBLIC_API_URL ||
+            "http://localhost:8081"}{" "}
+          · KPI dari CMS Postgres
         </p>
       </form>
     </div>

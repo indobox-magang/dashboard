@@ -12,6 +12,7 @@ const CRUMBS: Record<string, string> = {
   "/operations": "Dashboard / Operasional",
   "/fnb": "Dashboard / F&B Detail",
   "/optimizer": "Dashboard / Optimizer Showtime",
+  "/cms": "Dashboard / Data CMS",
   "/settings": "Pengaturan / Konfigurasi Alert",
 };
 
@@ -41,14 +42,14 @@ function AppChrome({ children }: { children: React.ReactNode }) {
     : "—";
 
   return (
-    <div className="grid min-h-screen grid-cols-[238px_1fr] max-[720px]:block">
+    <div className="grid min-h-screen grid-cols-[238px_1fr] bg-[var(--bg)] max-[720px]:block">
       <Sidebar />
       <main className="mx-auto w-full max-w-[1450px] px-[clamp(18px,4vw,52px)] py-7 pb-12 max-[720px]:px-3.5">
         <div className="mb-8 flex items-center justify-between gap-4">
           <span className="text-xs text-[var(--muted)]">{CRUMBS[pathname] || "Dashboard"}</span>
           <span
             className={`flex items-center gap-1.5 text-xs font-bold max-[720px]:hidden ${
-              loading ? "text-[var(--amber)]" : "text-[#087c64]"
+              loading ? "text-[var(--accent)]" : "text-[var(--success)]"
             }`}
           >
             <i className="inline-block h-2 w-2 rounded-full bg-current" />

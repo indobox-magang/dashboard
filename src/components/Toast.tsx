@@ -30,8 +30,8 @@ export function ToastHost() {
 
   return createPortal(
     <div
-      className={`fixed right-5 bottom-5 z-50 rounded-lg bg-[#172439] px-4 py-3 text-[13px] text-white shadow-lg transition ${
-        visible ? "opacity-100 translate-y-0" : "pointer-events-none opacity-0 translate-y-2"
+      className={`fixed right-5 bottom-5 z-50 rounded-[var(--radius)] border border-[var(--panel-border)] bg-[var(--card-2)] px-4 py-3 text-[13px] text-white shadow-lg transition ${
+        visible ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2 opacity-0"
       }`}
     >
       {msg}

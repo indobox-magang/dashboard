@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionNeededPanel, ErrorState, LoadingState } from "@/components/Alerts";
+import { CmsInventoryStrip } from "@/components/CmsInventoryStrip";
 import { DeviceList } from "@/components/DeviceList";
 import { PageHead } from "@/components/Filters";
 import { Leaderboard, Panel } from "@/components/Leaderboard";
@@ -13,7 +14,7 @@ function Spark({ down }: { down: boolean }) {
       <path
         d={`M2 ${down ? 5 : 22} L12 ${down ? 8 : 18} L22 ${down ? 7 : 20} L32 ${down ? 14 : 11} L42 ${down ? 18 : 13} L52 ${down ? 22 : 5}`}
         fill="none"
-        stroke={down ? "#d34b58" : "#276ef1"}
+        stroke={down ? "#c8393a" : "#e8a225"}
         strokeWidth="2.3"
         strokeLinecap="round"
       />
@@ -57,33 +58,30 @@ export default function CommandPage() {
         subtitle="Prioritas bisnis dari data live indobox-cms."
       />
       {error ? <ErrorState message={error} /> : null}
-      <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
+      <CmsInventoryStrip />
+      <div className="notice">
         {highAlerts ? (
           <span>
-            ⚠ <b className="text-[#5e4106]">{highAlerts} alert berdampak tinggi</b> dari CMS
-            membutuhkan respons.
+            ⚠ <b>{highAlerts} alert berdampak tinggi</b> dari CMS membutuhkan respons.
           </span>
         ) : (
           <span>
-            ℹ Data diambil langsung dari <b className="text-[#5e4106]">indobox-cms</b> (tiket, snack
-            booking, jadwal, device player).
+            ℹ Data diambil langsung dari <b>indobox-cms</b> (tiket, snack booking, jadwal, device
+            player).
           </span>
         )}
       </div>
 
       <div className="grid grid-cols-6 gap-3 max-[1100px]:grid-cols-3 max-[720px]:grid-cols-2">
         {cards.map((x) => (
-          <article
-            key={x[0]}
-            className="rounded-xl border border-[var(--line)] bg-white p-4 shadow-[0_2px_6px_#17233d05]"
-          >
-            <div className="text-xs font-semibold text-[var(--muted)]">{x[0]}</div>
-            <div className="my-2 text-[22px] font-extrabold tracking-[-0.7px] whitespace-nowrap max-[720px]:text-[19px]">
+          <article key={x[0]} className="card p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {x[0]}
+            </div>
+            <div className="my-2 text-[22px] font-semibold tracking-[-0.7px] whitespace-nowrap text-white max-[720px]:text-[19px]">
               {x[1]}
             </div>
-            <span className={`text-xs font-bold ${x[2].down ? "text-[var(--red)]" : "text-[#078168]"}`}>
-              {x[2].text}
-            </span>
+            <span className={`text-xs font-bold ${x[2].down ? "down" : "up"}`}>{x[2].text}</span>
             <Spark down={x[2].down} />
           </article>
         ))}
@@ -93,7 +91,7 @@ export default function CommandPage() {
         <Panel>
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
-              <h2 className="m-0 text-base">Komposisi pendapatan</h2>
+              <h2 className="m-0 text-base text-white">Komposisi pendapatan</h2>
               <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
                 {fmtIDR(k.net_revenue, true)} · {periodLabel(period)}
               </p>
@@ -104,30 +102,30 @@ export default function CommandPage() {
               className="grid aspect-square w-[150px] place-items-center rounded-full max-[720px]:w-[122px]"
               style={{
                 background: conic([
-                  [data.mix.ticket_pct || 0, "#276ef1"],
-                  [data.mix.snack_pct || 0, "#61c5b0"],
+                  [data.mix.ticket_pct || 0, "#e8a225"],
+                  [data.mix.snack_pct || 0, "#3dbe78"],
                 ]),
               }}
             >
-              <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-white text-center text-[11px] text-[var(--muted)] max-[720px]:w-[85px]">
+              <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)] max-[720px]:w-[85px]">
                 Total
-                <strong className="block text-[17px] text-[var(--ink)]">
+                <strong className="block text-[17px] text-white">
                   {fmtIDR(k.net_revenue, true)}
                 </strong>
               </div>
             </div>
             <div className="grid gap-3.5">
-              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]">
-                <i className="h-2.5 w-2.5 rounded-sm bg-[#276ef1]" />
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+                <i className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />
                 <span>Tiket</span>
-                <b className="text-xs">
+                <b className="text-xs text-white">
                   {fmtPct(data.mix.ticket_pct)} · {fmtIDR(ticketAmt, true)}
                 </b>
               </div>
-              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]">
-                <i className="h-2.5 w-2.5 rounded-sm bg-[#61c5b0]" />
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+                <i className="h-2.5 w-2.5 rounded-sm bg-[var(--success)]" />
                 <span>Snack (app)</span>
-                <b className="text-xs">
+                <b className="text-xs text-white">
                   {fmtPct(data.mix.snack_pct)} · {fmtIDR(snackAmt, true)}
                 </b>
               </div>
@@ -136,17 +134,17 @@ export default function CommandPage() {
         </Panel>
 
         <Panel>
-          <h2 className="m-0 text-base">Tren pendapatan</h2>
+          <h2 className="m-0 text-base text-white">Tren pendapatan</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">Tiket + snack per hari</p>
           {data.trend?.length ? (
             <>
-              <div className="flex h-[130px] items-end gap-2 border-b border-[var(--line)] pt-2.5">
+              <div className="flex h-[130px] items-end gap-2 border-b border-[var(--panel-border)] pt-2.5">
                 {data.trend.map((t, i) => (
                   <i
                     key={t.date}
                     title={fmtIDR(t.revenue)}
                     className={`min-w-3 flex-1 rounded-t ${
-                      i === data.trend.length - 1 ? "bg-[var(--blue)]" : "bg-[#c1d3fa]"
+                      i === data.trend.length - 1 ? "bg-[var(--accent)]" : "bg-[#2a4a78]"
                     }`}
                     style={{ height: `${Math.max(4, (t.revenue / maxTrend) * 100)}%` }}
                   />
@@ -168,14 +166,14 @@ export default function CommandPage() {
 
       <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base">Performa cabang</h2>
+          <h2 className="m-0 text-base text-white">Performa cabang</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Dari sites + bookings CMS
           </p>
           <Leaderboard rows={data.branches || []} />
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base">Device player</h2>
+          <h2 className="m-0 text-base text-white">Device player</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Status heartbeat dari CMS
           </p>

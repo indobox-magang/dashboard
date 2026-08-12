@@ -9,11 +9,7 @@ export function Filters({ show = true }: { show?: boolean }) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <select
-        className="min-h-[39px] rounded-lg border border-[var(--line)] bg-white px-3 text-[var(--ink)]"
-        value={siteId}
-        onChange={(e) => setSiteId(e.target.value)}
-      >
+      <select className="input w-auto min-w-[160px]" value={siteId} onChange={(e) => setSiteId(e.target.value)}>
         <option value="">Semua Cabang</option>
         {(data?.sites || []).map((s) => (
           <option key={s.id} value={s.id}>
@@ -22,11 +18,9 @@ export function Filters({ show = true }: { show?: boolean }) {
         ))}
       </select>
       <select
-        className="min-h-[39px] rounded-lg border border-[var(--line)] bg-white px-3 text-[var(--ink)]"
+        className="input w-auto min-w-[150px]"
         value={period}
-        onChange={(e) => {
-          setPeriod(e.target.value as PeriodKey);
-        }}
+        onChange={(e) => setPeriod(e.target.value as PeriodKey)}
       >
         <option value="7d">7 hari terakhir</option>
         <option value="1d">Hari ini</option>
@@ -41,15 +35,17 @@ export function PageHead({
   subtitle,
   controls = true,
 }: {
-  title: string;
+  title: React.ReactNode;
   subtitle: string;
   controls?: boolean;
 }) {
   return (
     <div className="mb-6 flex items-start justify-between gap-4 max-[720px]:flex-col">
       <div>
-        <h1 className="m-0 text-[29px] tracking-[-1px]">{title}</h1>
-        <p className="mt-1.5 mb-0 text-[var(--muted)]">{subtitle}</p>
+        <h1 className="m-0 flex flex-wrap items-center gap-2 text-[28px] font-semibold tracking-[-0.5px] text-white">
+          {title}
+        </h1>
+        <p className="mt-1.5 mb-0 text-sm text-[var(--muted)]">{subtitle}</p>
       </div>
       <Filters show={controls} />
     </div>

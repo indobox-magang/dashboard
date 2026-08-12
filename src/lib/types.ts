@@ -163,3 +163,138 @@ export type DashboardSummary = {
 };
 
 export type PeriodKey = "1d" | "7d" | "28d";
+
+export type ScreenRow = {
+  id: number;
+  site_id: number;
+  name: string;
+  rows?: number;
+  cols?: number;
+};
+
+export type DeviceAdminRow = {
+  id: number;
+  site_id: number;
+  site: string;
+  name: string;
+  status?: string;
+  last_heartbeat_at?: string;
+  playback_status?: string;
+  playback_error?: string;
+};
+
+export type AssetRow = {
+  id: number;
+  kind: string;
+  title: string;
+  status: string;
+  genre?: string;
+  duration_ms?: number;
+  created_at?: string;
+};
+
+export type ShowRow = {
+  id: number;
+  screen_id: number;
+  screen_name: string;
+  site_name: string;
+  starts_at: string;
+  ends_at?: string;
+  title: string;
+  status: string;
+  price?: number;
+  show_no?: number;
+  booking_enabled?: boolean;
+};
+
+export type ScheduleGroup = {
+  site_id: number;
+  site_name: string;
+  shows: ShowRow[];
+};
+
+export type BookingRow = {
+  id: string;
+  code: string;
+  status: string;
+  total: number;
+  created_at: string;
+  paid_at?: string;
+  user_name: string;
+  email?: string;
+  movie_title: string;
+  start_time: string;
+  city: string;
+};
+
+export type SnackRow = {
+  id: string;
+  name: string;
+  size: string;
+  price: number;
+  category: string;
+  available: number;
+};
+
+export type PromoRow = {
+  id: string;
+  code: string;
+  title: string;
+  subtitle: string;
+  kind: string;
+  value_pct: number;
+  value_flat: number;
+  active: number;
+};
+
+export type BannerRow = {
+  id: string;
+  title: string;
+  subtitle: string;
+  image_url: string;
+  link_url: string;
+  active: number;
+};
+
+export type StaffRow = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  created_at: string;
+};
+
+export type CustomerRow = {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  points: number;
+  active: boolean;
+  booking_count: number;
+  tier: string;
+};
+
+export type StorageStats = {
+  bucket_name?: string;
+  total_quota_bytes?: number;
+  total_size_bytes: number;
+  total_count: number;
+  breakdown: { kind: string; count: number; total_size_bytes: number }[];
+};
+
+export type CmsSnapshot = {
+  sites: SiteOption[];
+  screens: ScreenRow[];
+  devices: DeviceAdminRow[];
+  assets: AssetRow[];
+  shows: ShowRow[];
+  bookings: BookingRow[];
+  snacks: SnackRow[];
+  promos: PromoRow[];
+  banners: BannerRow[];
+  staff: StaffRow[];
+  customers: CustomerRow[];
+  storage: StorageStats;
+  fetched_at: string;
+};

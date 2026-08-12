@@ -8,7 +8,24 @@ import type {
   CmsSite,
   CmsSnack,
 } from "./cms";
-import type { DashboardSummary, PeriodKey } from "./types";
+import type {
+  AssetRow,
+  BannerRow,
+  BookingRow,
+  CmsSnapshot,
+  CustomerRow,
+  DashboardSummary,
+  DeviceAdminRow,
+  PeriodKey,
+  PromoRow,
+  ScheduleGroup,
+  ScreenRow,
+  ShowRow,
+  SiteOption,
+  SnackRow,
+  StaffRow,
+  StorageStats,
+} from "./types";
 
 /** Prefer NEXT_PUBLIC_API_URL; local CMS often runs on :8081 when :8080 is taken. */
 const DEFAULT_API = "http://127.0.0.1:8081";
@@ -124,4 +141,86 @@ export async function fetchBookings(): Promise<CmsBooking[]> {
   const res = await api<CmsBooking[] | { items: CmsBooking[] }>("/v1/admin/bookings");
   if (Array.isArray(res)) return res;
   return res.items ?? [];
+}
+
+async function soft<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Parallel read of existing CMS admin endpoints (no new CMS APIs). */
+export async function fetchCmsSnapshot(): Promise<CmsSnapshot> {
+  const [
+    sitesRes,
+    screensRes,
+    devicesRes,
+    assetsRes,
+    showsRes,
+    bookings,
+    snacks,
+    promos,
+    banners,
+    staff,
+    customers,
+    storage,
+  ] = await Promise.all([
+    soft(api<{ items: SiteOption[] }>("/v1/admin/sites"), { items: [] }),
+    soft(api<{ items: ScreenRow[] }>("/v1/admin/screens"), { items: [] }),
+    soft(api<{ devices: DeviceAdminRow[] }>("/v1/admin/devices"), { devices: [] }),
+    soft(api<{ items: AssetRow[] }>("/v1/admin/assets?kind=feature&status=verified"), {
+      items: [],
+    }),
+    soft(api<{ items: ShowRow[]; groups?: ScheduleGroup[] }>(
+      "/v1/admin/shows?status=scheduled&view=grouped"
+    ), { items: [] }),
+    soft(api<BookingRow[]>("/v1/admin/bookings"), []),
+    soft(api<SnackRow[]>("/v1/admin/snacks"), []),
+    soft(api<PromoRow[]>("/v1/admin/promos"), []),
+    soft(api<BannerRow[]>("/v1/admin/banners"), []),
+    soft(api<StaffRow[]>("/v1/admin/booking-staff"), []),
+    soft(api<CustomerRow[]>("/v1/admin/booking-users"), []),
+    soft(api<StorageStats>("/v1/admin/storage-stats"), {
+      total_size_bytes: 0,
+      total_count: 0,
+      breakdown: [],
+    }),
+  ]);
+
+  const showsFromGroups =
+    showsRes.groups?.flatMap((g) =>
+      (g.shows || []).map((s) => ({
+        id: s.id,
+        screen_id: s.screen_id,
+        screen_name: s.screen_name,
+        site_name: s.site_name || g.site_name,
+        starts_at: s.starts_at,
+        ends_at: s.ends_at,
+        title: s.title,
+        status: s.status,
+        price: s.price,
+        show_no: s.show_no,
+        booking_enabled: s.booking_enabled,
+      }))
+    ) || [];
+
+  const shows = showsFromGroups.length ? showsFromGroups : showsRes.items || [];
+
+  return {
+    sites: sitesRes.items || [],
+    screens: screensRes.items || [],
+    devices: devicesRes.devices || [],
+    assets: assetsRes.items || [],
+    shows,
+    bookings: bookings || [],
+    snacks: snacks || [],
+    promos: promos || [],
+    banners: banners || [],
+    staff: staff || [],
+    customers: customers || [],
+    storage,
+    fetched_at: new Date().toISOString(),
+  };
 }

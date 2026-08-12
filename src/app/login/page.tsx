@@ -32,25 +32,34 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen place-items-center bg-[radial-gradient(ellipse_at_20%_10%,#dce8ff_0%,transparent_50%),radial-gradient(ellipse_at_80%_90%,#d8f3ec_0%,transparent_45%),var(--bg)] p-6">
+    <div className="relative grid min-h-screen place-items-center p-6">
+      <div
+        className="pointer-events-none fixed inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse at 20% 10%, rgba(232,162,37,0.18) 0%, transparent 45%), radial-gradient(ellipse at 80% 90%, rgba(61,190,120,0.12) 0%, transparent 40%), var(--bg)",
+        }}
+      />
       <form
         onSubmit={onSubmit}
-        className="grid w-full max-w-[400px] gap-3 rounded-[14px] border border-[var(--line)] bg-white p-7 shadow-[0_12px_40px_#17233d12]"
+        className="card relative z-10 grid w-full max-w-[400px] gap-3 p-7 backdrop-blur"
       >
-        <div className="mb-2 flex items-center gap-2.5 text-xl font-extrabold text-[var(--ink)]">
-          <span className="grid h-[29px] w-[29px] place-items-center rounded-[9px] bg-[#62d8bd] text-base text-[var(--nav)]">
+        <div className="mb-2 flex items-center gap-2.5 text-xl font-extrabold text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-[var(--radius)] bg-[var(--accent)] text-base text-[var(--navy-900)]">
             i
           </span>
           indobox
         </div>
-        <h1 className="m-0 text-[22px] tracking-[-0.5px]">Business Dashboard</h1>
-        <p className="m-0 mb-2 text-[var(--muted)]">
+        <h1 className="m-0 text-[22px] font-semibold tracking-[-0.5px] text-white">
+          Business Dashboard
+        </h1>
+        <p className="m-0 mb-2 text-sm text-[var(--muted)]">
           Masuk dengan akun admin CMS untuk melihat data live.
         </p>
         <label className="grid gap-1.5 text-xs font-semibold text-[var(--muted)]">
           Email
           <input
-            className="min-h-10 rounded-lg border border-[var(--line)] px-3 text-[var(--ink)]"
+            className="input"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -60,22 +69,18 @@ export default function LoginPage() {
         <label className="grid gap-1.5 text-xs font-semibold text-[var(--muted)]">
           Password
           <input
-            className="min-h-10 rounded-lg border border-[var(--line)] px-3 text-[var(--ink)]"
+            className="input"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
         </label>
-        {error ? <p className="m-0 text-[13px] text-[var(--red)]">{error}</p> : null}
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-lg border border-[var(--blue)] bg-[var(--blue)] px-3 py-2.5 text-xs font-bold text-white disabled:opacity-60"
-        >
+        {error ? <p className="m-0 text-[13px] text-[var(--danger)]">{error}</p> : null}
+        <button type="submit" disabled={busy} className="btn-primary mt-1">
           {busy ? "Masuk…" : "Masuk"}
         </button>
-        <p className="m-0 text-[11px] text-[var(--muted)]">
+        <p className="m-0 text-[11px] text-slate-500">
           API: {process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}
         </p>
       </form>

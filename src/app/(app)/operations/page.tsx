@@ -41,42 +41,48 @@ export default function OperationsPage() {
       {error ? <ErrorState message={error} /> : null}
       {cms.error ? <ErrorState message={cms.error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
-        <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
-          <span className="text-xs font-semibold text-[var(--muted)]">Device online</span>
-          <b className="mt-1.5 block text-2xl">{fmtPct(health.onlinePct, 0)}</b>
-          <span
-            className={`text-xs font-bold ${
-              health.offline ? "text-[var(--red)]" : "text-[#078168]"
-            }`}
-          >
+        <div className="health-tile">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Device online
+          </span>
+          <b className="mt-1.5 block text-2xl text-white">{fmtPct(health.onlinePct, 0)}</b>
+          <span className={`text-xs font-bold ${health.offline ? "down" : "up"}`}>
             {health.offline || 0} offline · dari /devices
           </span>
         </div>
-        <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
-          <span className="text-xs font-semibold text-[var(--muted)]">Kapasitas studio</span>
-          <b className="mt-1.5 block text-2xl">{seatCapacity.toLocaleString("id-ID")}</b>
+        <div className="health-tile">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Kapasitas studio
+          </span>
+          <b className="mt-1.5 block text-2xl text-white">
+            {seatCapacity.toLocaleString("id-ID")}
+          </b>
           <span className="text-xs text-[var(--muted)]">
             {cms.screens.length} screen · /screens
           </span>
         </div>
-        <div className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
-          <span className="text-xs font-semibold text-[var(--muted)]">F&B spend / admission</span>
-          <b className="mt-1.5 block text-2xl">{fmtIDR(data.health.fnb_per_admission)}</b>
+        <div className="health-tile">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            F&B spend / admission
+          </span>
+          <b className="mt-1.5 block text-2xl text-white">
+            {fmtIDR(data.health.fnb_per_admission)}
+          </b>
         </div>
       </div>
 
       <div className="grid grid-cols-[1.15fr_0.85fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base">Branch leaderboard</h2>
+          <h2 className="m-0 text-base text-white">Branch leaderboard</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Peringkat dari dashboard summary
           </p>
           <Leaderboard rows={data.branches || []} />
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base">Device tracker</h2>
+          <h2 className="m-0 text-base text-white">Device tracker</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Player edge · GET /v1/admin/devices
+            Player edge · GET /v1/admin/devices — vending telemetry (Belum ada di cms)
           </p>
           <DeviceList devices={deviceRows} />
         </Panel>
@@ -84,7 +90,7 @@ export default function OperationsPage() {
 
       <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base">Snack katalog</h2>
+          <h2 className="m-0 text-base text-white">Snack katalog</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             GET /v1/admin/snacks · {unavailable.length} unavailable
           </p>
@@ -92,30 +98,32 @@ export default function OperationsPage() {
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] text-[var(--muted)]">Produk</th>
-                  <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Harga</th>
-                  <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Status</th>
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    Produk
+                  </th>
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                    Harga
+                  </th>
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                    Status
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {snacks.map((s) => (
                   <tr key={s.id}>
-                    <td className="border-t border-[var(--line)] py-3">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
                       {s.name}
                       {s.size ? (
                         <small className="ml-1 text-[var(--muted)]">({s.size})</small>
                       ) : null}
                     </td>
-                    <td className="border-t border-[var(--line)] py-3 text-right">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                       {fmtIDR(s.price)}
                     </td>
-                    <td className="border-t border-[var(--line)] py-3 text-right">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-right">
                       <span
-                        className={`rounded-full px-2 py-1 text-[11px] font-extrabold ${
-                          s.available
-                            ? "bg-[#e3f7ef] text-[#08745d]"
-                            : "bg-[#fff0d2] text-[#985a02]"
-                        }`}
+                        className={`badge ${s.available ? "badge-ok" : "badge-warn"}`}
                       >
                         {s.available ? "Available" : "Unavailable"}
                       </span>
@@ -129,13 +137,16 @@ export default function OperationsPage() {
           )}
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base">Catatan untuk manajer</h2>
+          <h2 className="m-0 text-base text-white">Catatan untuk manajer</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">Dari sinyal CMS</p>
           {alerts.slice(0, 3).length ? (
             <div className="grid gap-2.5">
               {alerts.slice(0, 3).map((a) => (
-                <div key={a.title} className="rounded-[9px] border border-[var(--line)] p-3">
-                  <b className="block">{a.title}</b>
+                <div
+                  key={a.title}
+                  className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3"
+                >
+                  <b className="block text-white">{a.title}</b>
                   <small className="text-[var(--muted)]">{a.detail}</small>
                 </div>
               ))}

@@ -6,7 +6,7 @@ import { Empty, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
 import { conic, fmtDelta, fmtIDR, fmtPct } from "@/lib/format";
 
-const COLORS = ["#276ef1", "#61c5b0", "#f1b64d", "#7656d6", "#c1d3fa"];
+const COLORS = ["#e8a225", "#3dbe78", "#c8393a", "#5b8def", "#8b7cc9"];
 
 export default function FnbPage() {
   const { data, loading, error, cms } = useDashboard();
@@ -33,18 +33,18 @@ export default function FnbPage() {
     <div>
       <PageHead
         title="F&B Detail"
-        subtitle="Snack dari booking app (booking_snacks), bukan vending machine."
+        subtitle="Snack dari booking app (booking_snacks). Vending machine (Belum ada di cms)."
       />
       {error ? <ErrorState message={error} /> : null}
       {cms.error ? <ErrorState message={cms.error} /> : null}
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
         {summary.map((s) => (
-          <div key={s[0]} className="rounded-[11px] border border-[#e4ecfc] bg-[#f7faff] p-4">
-            <span className="text-xs font-semibold text-[var(--muted)]">{s[0]}</span>
-            <b className="mt-1.5 block text-2xl">{s[1]}</b>
-            <span className={`text-xs font-bold ${s[2].down ? "text-[var(--red)]" : "text-[#078168]"}`}>
-              {s[2].text}
+          <div key={s[0]} className="health-tile">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {s[0]}
             </span>
+            <b className="mt-1.5 block text-2xl text-white">{s[1]}</b>
+            <span className={`text-xs font-bold ${s[2].down ? "down" : "up"}`}>{s[2].text}</span>
           </div>
         ))}
       </div>
@@ -53,16 +53,12 @@ export default function FnbPage() {
         <Panel>
           <div className="mb-4 flex items-start justify-between gap-4">
             <div>
-              <h2 className="m-0 text-base">Item terlaris</h2>
+              <h2 className="m-0 text-base text-white">Item terlaris</h2>
               <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
                 Pangsa unit terjual · {data.label}
               </p>
             </div>
-            {f.items?.[0] ? (
-              <span className="rounded-full bg-[#e3f7ef] px-2 py-1 text-[11px] font-extrabold text-[#08745d]">
-                {f.items[0].name}
-              </span>
-            ) : null}
+            {f.items?.[0] ? <span className="badge badge-ok">{f.items[0].name}</span> : null}
           </div>
           {f.items?.length ? (
             <>
@@ -75,9 +71,9 @@ export default function FnbPage() {
                     ),
                   }}
                 >
-                  <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-white text-center text-[11px] text-[var(--muted)]">
+                  <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
                     Unit terjual
-                    <strong className="block text-[17px] text-[var(--ink)]">
+                    <strong className="block text-[17px] text-white">
                       {units.toLocaleString("id-ID")}
                     </strong>
                   </div>
@@ -86,14 +82,14 @@ export default function FnbPage() {
                   {f.items.map((x, i) => (
                     <div
                       key={x.name}
-                      className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]"
+                      className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
                     >
                       <i
                         className="h-2.5 w-2.5 rounded-sm"
                         style={{ background: COLORS[i % COLORS.length] }}
                       />
                       <span>{x.name}</span>
-                      <b className="text-xs">{fmtPct(x.share_pct)}</b>
+                      <b className="text-xs text-white">{fmtPct(x.share_pct)}</b>
                     </div>
                   ))}
                 </div>
@@ -101,10 +97,16 @@ export default function FnbPage() {
               <table className="mt-5 w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    <th className="pb-2.5 text-left text-[11px] text-[var(--muted)]">Produk</th>
-                    <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Unit terjual</th>
-                    <th className="pb-2.5 text-right text-[11px] text-[var(--muted)]">Pendapatan</th>
-                    <th className="pb-2.5 text-right text-[11px] text-[var(--muted)] max-[720px]:hidden">
+                    <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                      Produk
+                    </th>
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                      Unit terjual
+                    </th>
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                      Pendapatan
+                    </th>
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500 max-[720px]:hidden">
                       Pangsa
                     </th>
                   </tr>
@@ -112,19 +114,19 @@ export default function FnbPage() {
                 <tbody>
                   {f.items.map((x, i) => (
                     <tr key={x.name}>
-                      <td className="border-t border-[var(--line)] py-3">
-                        <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-md bg-[#ebf2ff] text-[11px] font-extrabold text-[#3461b4]">
+                      <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                        <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-[var(--radius)] bg-[rgba(232,162,37,0.15)] text-[11px] font-extrabold text-[var(--accent)]">
                           {i + 1}
                         </span>
                         {x.name}
                       </td>
-                      <td className="border-t border-[var(--line)] py-3 text-right">
+                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                         {(x.units || 0).toLocaleString("id-ID")}
                       </td>
-                      <td className="border-t border-[var(--line)] py-3 text-right">
+                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                         {fmtIDR(x.revenue, true)}
                       </td>
-                      <td className="border-t border-[var(--line)] py-3 text-right max-[720px]:hidden">
+                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-300 max-[720px]:hidden">
                         {fmtPct(x.share_pct)}
                       </td>
                     </tr>
@@ -138,7 +140,7 @@ export default function FnbPage() {
         </Panel>
 
         <Panel>
-          <h2 className="m-0 text-base">Konversi pengunjung ke pembelian snack</h2>
+          <h2 className="m-0 text-base text-white">Konversi pengunjung ke pembelian snack</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Booking tiket yang menyertakan snack
           </p>
@@ -146,26 +148,28 @@ export default function FnbPage() {
             className="mx-auto grid aspect-square w-[150px] place-items-center rounded-full"
             style={{
               background: conic([
-                [f.attach_pct || 0, "#276ef1"],
-                [100 - (f.attach_pct || 0), "#e7ebf2"],
+                [f.attach_pct || 0, "#e8a225"],
+                [100 - (f.attach_pct || 0), "#243552"],
               ]),
             }}
           >
-            <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-white text-center text-[11px] text-[var(--muted)]">
+            <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
               Attach rate
-              <strong className="block text-[17px] text-[var(--ink)]">{fmtPct(f.attach_pct)}</strong>
+              <strong className="block text-[17px] text-white">{fmtPct(f.attach_pct)}</strong>
             </div>
           </div>
           <div className="mt-5 grid gap-3.5">
-            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]">
-              <i className="h-2.5 w-2.5 rounded-sm bg-[#276ef1]" />
+            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+              <i className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />
               <span>Membeli snack</span>
-              <b className="text-xs">{(f.buyers || 0).toLocaleString("id-ID")} booking</b>
+              <b className="text-xs text-white">
+                {(f.buyers || 0).toLocaleString("id-ID")} booking
+              </b>
             </div>
-            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]">
-              <i className="h-2.5 w-2.5 rounded-sm bg-[#e7ebf2]" />
+            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+              <i className="h-2.5 w-2.5 rounded-sm bg-[#243552]" />
               <span>Tanpa snack</span>
-              <b className="text-xs">
+              <b className="text-xs text-white">
                 {Math.max(0, (f.visitors || 0) - (f.buyers || 0)).toLocaleString("id-ID")} booking
               </b>
             </div>
@@ -175,7 +179,7 @@ export default function FnbPage() {
 
       <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base">Waktu pembelian</h2>
+          <h2 className="m-0 text-base text-white">Waktu pembelian</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Distribusi transaksi snack per slot
           </p>
@@ -189,9 +193,9 @@ export default function FnbPage() {
                   ),
                 }}
               >
-                <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-white text-center text-[11px] text-[var(--muted)]">
+                <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
                   Puncak {peak?.slot || "—"}
-                  <strong className="block text-[17px] text-[var(--ink)]">
+                  <strong className="block text-[17px] text-white">
                     {fmtPct(peak?.pct || 0)}
                   </strong>
                 </div>
@@ -200,14 +204,14 @@ export default function FnbPage() {
                 {f.hours.map((x, i) => (
                   <div
                     key={x.slot}
-                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px]"
+                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
                   >
                     <i
                       className="h-2.5 w-2.5 rounded-sm"
                       style={{ background: COLORS[i % COLORS.length] }}
                     />
                     <span>{x.slot}</span>
-                    <b className="text-xs">{fmtPct(x.pct)}</b>
+                    <b className="text-xs text-white">{fmtPct(x.pct)}</b>
                   </div>
                 ))}
               </div>
@@ -217,35 +221,54 @@ export default function FnbPage() {
           )}
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base">Katalog snack CMS</h2>
+          <h2 className="m-0 text-base text-white">Katalog snack CMS</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             GET /v1/admin/snacks
           </p>
           {cms.snacks.length ? (
-            <div className="grid gap-2">
+            <div className="mb-4 grid gap-2">
               {cms.snacks.map((s) => (
                 <div
                   key={s.id}
-                  className="flex items-center justify-between gap-2 border-t border-[var(--line)] py-2 first:border-t-0 first:pt-0"
+                  className="flex items-center justify-between gap-2 border-t border-[var(--panel-border)] py-2 first:border-t-0 first:pt-0"
                 >
-                  <span>
+                  <span className="text-slate-200">
                     {s.name}
                     <small className="ml-1 text-[var(--muted)]">
                       {s.available ? "available" : "unavailable"}
                     </small>
                   </span>
-                  <b className="text-xs">{fmtIDR(s.price)}</b>
+                  <b className="text-xs text-white">{fmtIDR(s.price)}</b>
                 </div>
               ))}
             </div>
           ) : (
             <Empty>Katalog snack belum termuat.</Empty>
           )}
+          <div className="mt-2 grid gap-2.5">
+            <div className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3">
+              <b className="block text-white">Attach rate berbasis transaksi</b>
+              <small className="text-[var(--muted)]">
+                Dihitung dari booking berstatus paid/used yang punya baris snack.
+              </small>
+            </div>
+            <div className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3">
+              <b className="block text-white">
+                Vending machine / POS counter{" "}
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--accent)]">
+                  (Belum ada di cms)
+                </span>
+              </b>
+              <small className="text-[var(--muted)]">
+                Metrik F&B di dashboard hanya dari snack yang dipesan lewat aplikasi booking.
+              </small>
+            </div>
+          </div>
         </Panel>
       </div>
 
       <Panel className="mt-4">
-        <h2 className="m-0 text-base">Booking paid/used terbaru</h2>
+        <h2 className="m-0 text-base text-white">Booking paid/used terbaru</h2>
         <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
           GET /v1/admin/bookings · sample untuk konteks F&B
         </p>
@@ -262,12 +285,18 @@ export default function FnbPage() {
             <tbody>
               {recentPaid.map((b) => (
                 <tr key={b.id}>
-                  <td className="border-t border-[var(--line)] py-2.5">{b.code}</td>
-                  <td className="border-t border-[var(--line)] py-2.5">{b.movie_title || "—"}</td>
-                  <td className="border-t border-[var(--line)] py-2.5 text-right">
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-slate-200">
+                    {b.code}
+                  </td>
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-slate-200">
+                    {b.movie_title || "—"}
+                  </td>
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-right text-white">
                     {fmtIDR(b.total, true)}
                   </td>
-                  <td className="border-t border-[var(--line)] py-2.5 text-right">{b.status}</td>
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-right text-[var(--muted)]">
+                    {b.status}
+                  </td>
                 </tr>
               ))}
             </tbody>

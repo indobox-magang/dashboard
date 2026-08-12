@@ -1,43 +1,165 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageHead } from "@/components/Filters";
 import { Panel } from "@/components/Leaderboard";
-import { NotInCms } from "@/components/NotInCms";
 import { toast } from "@/components/Toast";
 import { useDashboard } from "@/hooks/useDashboardSummary";
-import { getApiUrl } from "@/lib/api";
+import {
+  ApiError,
+  fetchAlertSettings,
+  getApiUrl,
+  saveAlertSettings,
+} from "@/lib/api";
+import type { DashAlertCatalogue, DashAlertSettings, DashAlertThresholds } from "@/lib/types";
 
-const CATALOGUE = [
-  ["Demand overflow", "Okupansi slot ≥ 80% — pertimbangkan tambah showtime.", true],
-  ["Under-utilised show", "Film dengan okupansi < 25% pada periode.", true],
-  ["Device offline / error", "Player tanpa heartbeat atau playback_error.", true],
-  ["Snack unavailable", "Item katalog dengan available = 0.", true],
-] as const;
+const CATALOGUE_ROWS: {
+  key: keyof DashAlertCatalogue;
+  title: string;
+  hint: string;
+}[] = [
+  {
+    key: "demand_overflow",
+    title: "Demand overflow",
+    hint: "Okupansi periode ≥ ambang overflow — pertimbangkan tambah showtime.",
+  },
+  {
+    key: "under_utilised",
+    title: "Under-utilised show",
+    hint: "Okupansi periode di bawah ambang under-utilised.",
+  },
+  {
+    key: "device_offline",
+    title: "Device offline / error",
+    hint: "Player tanpa heartbeat atau playback_error.",
+  },
+  {
+    key: "snack_unavailable",
+    title: "Snack unavailable",
+    hint: "Item katalog dengan available = 0.",
+  },
+];
+
+const DEFAULT_SETTINGS: DashAlertSettings = {
+  catalogue: {
+    demand_overflow: true,
+    under_utilised: true,
+    device_offline: true,
+    snack_unavailable: true,
+  },
+  thresholds: {
+    demand_overflow_occupancy_pct: 80,
+    under_utilised_occupancy_pct: 25,
+    device_online_window_minutes: 2,
+  },
+};
 
 export default function SettingsPage() {
-  const [enabled, setEnabled] = useState<boolean[]>(CATALOGUE.map((x) => x[2]));
   const { cms, refresh } = useDashboard();
+  const [settings, setSettings] = useState<DashAlertSettings>(DEFAULT_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const remote = await fetchAlertSettings();
+      setSettings({
+        catalogue: { ...DEFAULT_SETTINGS.catalogue, ...remote.catalogue },
+        thresholds: { ...DEFAULT_SETTINGS.thresholds, ...remote.thresholds },
+        updated_at: remote.updated_at,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memuat settings";
+      if (err instanceof ApiError && err.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function persist(next: DashAlertSettings) {
+    setSaving(true);
+    setError(null);
+    try {
+      const saved = await saveAlertSettings(next);
+      setSettings({
+        catalogue: saved.catalogue,
+        thresholds: saved.thresholds,
+        updated_at: saved.updated_at,
+      });
+      toast("Pengaturan alert disimpan ke CMS.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal menyimpan";
+      setError(message);
+      toast(message);
+      await load();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function toggleCatalogue(key: keyof DashAlertCatalogue) {
+    const next: DashAlertSettings = {
+      ...settings,
+      catalogue: { ...settings.catalogue, [key]: !settings.catalogue[key] },
+    };
+    setSettings(next);
+    void persist(next);
+  }
+
+  function setThreshold(key: keyof DashAlertThresholds, raw: string) {
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return;
+    setSettings((prev) => ({
+      ...prev,
+      thresholds: { ...prev.thresholds, [key]: n },
+    }));
+  }
+
+  async function saveThresholds() {
+    await persist(settings);
+  }
+
+  const t = settings.thresholds;
 
   return (
     <div>
       <PageHead
-        title={
-          <>
-            Konfigurasi Alert <NotInCms />
-          </>
-        }
-        subtitle="Ambang & katalog alert tidak disimpan di indobox-cms — hanya tampilan lokal dashboard."
+        title="Konfigurasi Alert"
+        subtitle="Katalog & ambang alert disimpan di indobox-cms (system_settings)."
         controls={false}
       />
       <div className="notice">
         ⚙{" "}
         <span>
-          Sumber sinyal (device, snack, okupansi) dari CMS; modul pengaturan alert sendiri{" "}
-          <b>(Belum ada di cms)</b>. Alert live memakai sinyal CMS yang sudah ada — spek lengkap
-          + item belum di CMS: PRD v2.1 / docs/CMS-ALIGNMENT-BACKLOG.
+          Sumber sinyal (device, snack, okupansi) dan pengaturan alert sekarang dari CMS. Ubah di
+          sini langsung memengaruhi <b>/v1/admin/dashboard/summary</b>.
+          {settings.updated_at ? (
+            <>
+              {" "}
+              Terakhir diubah: <b>{new Date(settings.updated_at).toLocaleString()}</b>.
+            </>
+          ) : null}
         </span>
       </div>
+      {error ? (
+        <div className="notice mb-4" role="alert">
+          ⚠ {error}
+        </div>
+      ) : null}
+      {loading ? (
+        <p className="text-sm text-[var(--muted)]">Memuat pengaturan dari CMS…</p>
+      ) : null}
 
       <Panel className="mb-4">
         <div className="mb-3 flex items-start justify-between gap-3">
@@ -119,38 +241,33 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-[1.45fr_0.85fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base text-white">
-            Alert catalogue (live) <NotInCms />
-          </h2>
+          <h2 className="m-0 text-base text-white">Alert catalogue</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Implemented / Partial di CMS hari ini — toggle hanya tampilan lokal; bukan daftar penuh
-            PRD (vending, ack audit, dll).
+            Toggle disimpan ke CMS. Dinonaktifkan = tipe alert tidak muncul di summary.
           </p>
-          {CATALOGUE.map((x, i) => (
+          {CATALOGUE_ROWS.map((row, i) => (
             <div
-              key={x[0]}
+              key={row.key}
               className={`flex items-center justify-between gap-4 py-3.5 ${
                 i === 0 ? "" : "border-t border-[var(--panel-border)]"
               }`}
             >
               <div>
-                <b className="text-white">{x[0]}</b>
-                <p className="m-0 mt-1 text-xs text-[var(--muted)]">{x[1]}</p>
+                <b className="text-white">{row.title}</b>
+                <p className="m-0 mt-1 text-xs text-[var(--muted)]">{row.hint}</p>
               </div>
               <button
                 type="button"
-                aria-label="Status"
-                className={`relative h-[23px] w-[41px] rounded-full border-0 ${
-                  enabled[i] ? "bg-[var(--accent)]" : "bg-[#3a4d6b]"
+                aria-label={row.title}
+                disabled={saving || loading}
+                className={`relative h-[23px] w-[41px] rounded-full border-0 disabled:opacity-50 ${
+                  settings.catalogue[row.key] ? "bg-[var(--accent)]" : "bg-[#3a4d6b]"
                 }`}
-                onClick={() => {
-                  setEnabled((prev) => prev.map((v, idx) => (idx === i ? !v : v)));
-                  toast("Tampilan lokal diperbarui (Belum ada di cms).");
-                }}
+                onClick={() => toggleCatalogue(row.key)}
               >
                 <i
                   className={`absolute top-[3px] h-[17px] w-[17px] rounded-full bg-white transition ${
-                    enabled[i] ? "left-[21px]" : "left-[3px]"
+                    settings.catalogue[row.key] ? "left-[21px]" : "left-[3px]"
                   }`}
                 />
               </button>
@@ -158,32 +275,42 @@ export default function SettingsPage() {
           ))}
         </Panel>
         <Panel>
-          <h2 className="m-0 text-base text-white">
-            Nilai pemicu (referensi) <NotInCms />
-          </h2>
+          <h2 className="m-0 text-base text-white">Nilai pemicu</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Tidak ada konfigurasi threshold di CMS admin.
+            Ambang dipakai engine alert CMS saat membangun summary.
           </p>
-          {[
-            ["Demand overflow · okupansi", "80", "%"],
-            ["Under-utilised · okupansi", "25", "%"],
-            ["Device online window", "2", "mnt"],
-          ].map(([label, value, unit]) => (
+          {(
+            [
+              ["Demand overflow · okupansi", "demand_overflow_occupancy_pct", "%"],
+              ["Under-utilised · okupansi", "under_utilised_occupancy_pct", "%"],
+              ["Device online window", "device_online_window_minutes", "mnt"],
+            ] as const
+          ).map(([label, key, unit]) => (
             <div
-              key={label}
+              key={key}
               className="flex items-center justify-between gap-4 border-t border-[var(--panel-border)] py-3.5 first:border-t-0"
             >
               <span className="text-slate-200">{label}</span>
               <div className="flex items-center gap-2 text-[var(--muted)]">
-                <input className="input w-[78px] text-right" value={value} type="number" disabled />
+                <input
+                  className="input w-[78px] text-right"
+                  value={t[key]}
+                  type="number"
+                  disabled={loading || saving}
+                  onChange={(e) => setThreshold(key, e.target.value)}
+                />
                 {unit}
               </div>
             </div>
           ))}
-          <p className="mt-4 text-xs text-[var(--muted)]">
-            Ambang dikunci di kode API dashboard summary — bukan setting CMS (backlog B-06). Target
-            PRD: editable tanpa release.
-          </p>
+          <button
+            type="button"
+            className="btn-ghost mt-4 w-full text-[var(--accent)] disabled:opacity-50"
+            disabled={loading || saving}
+            onClick={() => void saveThresholds()}
+          >
+            {saving ? "Menyimpan…" : "Simpan ambang ke CMS"}
+          </button>
         </Panel>
       </div>
 
@@ -194,22 +321,27 @@ export default function SettingsPage() {
           CMS — detail: docs/DATA-CONTRACT.md.
         </p>
         <div className="mb-3 grid gap-2 text-sm text-slate-200">
-          <div>
-            Vending machine / stockout / telemetry <NotInCms />
+          <div className="text-[var(--muted)]">
+            Vending machine / stockout / telemetry —{" "}
+            <span className="text-[var(--accent)]">seed simulasi di CMS (bukan vendor live)</span>
           </div>
-          <div>
-            Private screening sebagai stream revenue <NotInCms />
+          <div className="text-[var(--muted)]">
+            Private screening sebagai stream revenue —{" "}
+            <span className="text-[var(--accent)]">sudah di CMS (shows.is_private)</span>
           </div>
-          <div>
-            Inventori stok harian / restock log <NotInCms />
+          <div className="text-[var(--muted)]">
+            Inventori stok harian / restock log —{" "}
+            <span className="text-[var(--accent)]">sudah di CMS (+ seed)</span>
           </div>
-          <div>
-            Persistensi acknowledgement alert <NotInCms />
+          <div className="text-[var(--muted)]">
+            Alert settings + acknowledgement —{" "}
+            <span className="text-[var(--accent)]">sudah di CMS</span>
           </div>
         </div>
         <code className="text-xs text-[var(--accent)]">
           Ada di CMS: summary · sites · screens · devices · shows · assets · snacks · bookings ·
-          health · showtime_seats · booking_snacks
+          health · showtime_seats · booking_snacks · snack_inventory · snack_restocks ·
+          alert-settings · alert-acknowledgements · shows.is_private · vending (seed)
         </code>
       </Panel>
     </div>

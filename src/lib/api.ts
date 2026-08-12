@@ -14,6 +14,7 @@ import type {
   BookingRow,
   CmsSnapshot,
   CustomerRow,
+  DashAlertSettings,
   DashboardSummary,
   DeviceAdminRow,
   PeriodKey,
@@ -22,9 +23,12 @@ import type {
   ScreenRow,
   ShowRow,
   SiteOption,
+  SnackInventoryRow,
+  SnackRestockRow,
   SnackRow,
   StaffRow,
   StorageStats,
+  VendingMachine,
 } from "./types";
 
 /** Prefer NEXT_PUBLIC_API_URL; local CMS often runs on :8081 when :8080 is taken. */
@@ -141,6 +145,75 @@ export async function fetchBookings(): Promise<CmsBooking[]> {
   const res = await api<CmsBooking[] | { items: CmsBooking[] }>("/v1/admin/bookings");
   if (Array.isArray(res)) return res;
   return res.items ?? [];
+}
+
+export async function fetchAlertSettings() {
+  return api<DashAlertSettings>("/v1/admin/dashboard/alert-settings");
+}
+
+export async function saveAlertSettings(settings: DashAlertSettings) {
+  return api<DashAlertSettings>("/v1/admin/dashboard/alert-settings", {
+    method: "PUT",
+    body: JSON.stringify({
+      catalogue: settings.catalogue,
+      thresholds: settings.thresholds,
+    }),
+  });
+}
+
+export async function acknowledgeAlert(alertKey: string, reason = "") {
+  return api<{
+    alert_key: string;
+    reason: string;
+    admin_user_id?: number;
+    acked_at: string;
+  }>("/v1/admin/dashboard/alert-acknowledgements", {
+    method: "POST",
+    body: JSON.stringify({ alert_key: alertKey, reason }),
+  });
+}
+
+export async function fetchSnackInventory(siteId?: string) {
+  const params = new URLSearchParams();
+  if (siteId) params.set("site_id", siteId);
+  const q = params.toString();
+  return api<{ items: SnackInventoryRow[] }>(
+    `/v1/admin/inventory/snacks${q ? `?${q}` : ""}`
+  );
+}
+
+export async function restockSnackInventory(input: {
+  site_id: number;
+  snack_id: string;
+  qty_delta: number;
+  note?: string;
+}) {
+  return api<{ restock: SnackRestockRow; inventory: SnackInventoryRow }>(
+    "/v1/admin/inventory/snacks/restock",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+    }
+  );
+}
+
+export async function fetchSnackRestocks(opts?: { siteId?: string; limit?: number }) {
+  const params = new URLSearchParams();
+  if (opts?.siteId) params.set("site_id", opts.siteId);
+  if (opts?.limit) params.set("limit", String(opts.limit));
+  const q = params.toString();
+  return api<{ items: SnackRestockRow[] }>(
+    `/v1/admin/inventory/snacks/restocks${q ? `?${q}` : ""}`
+  );
+}
+
+export async function fetchVendingMachines(siteId?: string) {
+  const params = new URLSearchParams();
+  if (siteId) params.set("site_id", siteId);
+  const q = params.toString();
+  return api<{ items: VendingMachine[]; note?: string }>(
+    `/v1/admin/vending/machines${q ? `?${q}` : ""}`
+  );
 }
 
 async function soft<T>(promise: Promise<T>, fallback: T): Promise<T> {

@@ -1,7 +1,5 @@
 "use client";
 
-import { toast } from "@/components/Toast";
-import { NotInCms } from "@/components/NotInCms";
 import { useDashboard } from "@/hooks/useDashboardSummary";
 import type { Alert } from "@/lib/types";
 import { Empty } from "./Leaderboard";
@@ -31,7 +29,7 @@ export function AlertList({
     <>
       {alerts.map((x, i) => (
         <div
-          key={`${x.title}-${i}`}
+          key={x.key || `${x.title}-${i}`}
           className="grid grid-cols-[9px_1fr_auto] gap-3 border-t border-[var(--panel-border)] px-5 py-4"
         >
           <i
@@ -51,7 +49,6 @@ export function AlertList({
             className="btn-ghost self-start text-[11px] text-[var(--accent)]"
             onClick={() => {
               onDismiss(i);
-              toast(`Alert “${x.title}” telah diakui.`);
             }}
           >
             {x.action}
@@ -70,7 +67,7 @@ export function ActionNeededPanel() {
         <div>
           <h2 className="m-0 text-base text-white">Action Needed</h2>
           <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
-            Alert dihitung dari data CMS · acknowledgement lokal <NotInCms />
+            Alert dari CMS · acknowledgement tersimpan di CMS
           </p>
         </div>
         <span className="text-xs font-extrabold text-[var(--danger)]">

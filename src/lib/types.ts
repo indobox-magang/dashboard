@@ -21,6 +21,8 @@ export type Deltas = {
 /** KPIs from CMS booking + shows. ticket_* is face total today (not full PRD net). */
 export type KPIs = {
   ticket_revenue: number;
+  public_ticket_revenue?: number;
+  private_ticket_revenue?: number;
   /** In-app booking_snacks only — not counter/vending. */
   snack_revenue: number;
   /** ticket_revenue + snack_revenue (current API proxy for “net”). */
@@ -39,6 +41,9 @@ export type KPIs = {
 export type Mix = {
   ticket_pct: number;
   snack_pct: number;
+  public_ticket_pct?: number;
+  private_ticket_pct?: number;
+  snack_mix_pct?: number;
 };
 
 export type TrendPoint = {
@@ -127,6 +132,27 @@ export type Alert = {
   title: string;
   detail: string;
   action: string;
+  type?: string;
+  key?: string;
+};
+
+export type DashAlertCatalogue = {
+  demand_overflow: boolean;
+  under_utilised: boolean;
+  device_offline: boolean;
+  snack_unavailable: boolean;
+};
+
+export type DashAlertThresholds = {
+  demand_overflow_occupancy_pct: number;
+  under_utilised_occupancy_pct: number;
+  device_online_window_minutes: number;
+};
+
+export type DashAlertSettings = {
+  catalogue: DashAlertCatalogue;
+  thresholds: DashAlertThresholds;
+  updated_at?: string | null;
 };
 
 export type Health = {
@@ -139,6 +165,59 @@ export type Health = {
 export type SnackAvail = {
   id: string;
   name: string;
+};
+
+export type SnackInventoryRow = {
+  site_id: number;
+  site_name: string;
+  snack_id: string;
+  snack_name: string;
+  qty_on_hand: number;
+  updated_at: string;
+  catalog_available?: number;
+};
+
+export type SnackRestockRow = {
+  id: number;
+  site_id: number;
+  site_name: string;
+  snack_id: string;
+  snack_name: string;
+  qty_delta: number;
+  qty_after: number;
+  note: string;
+  created_by?: number;
+  created_at: string;
+};
+
+export type VendingSlot = {
+  slot_code: string;
+  product_name: string;
+  qty_on_hand: number;
+  capacity: number;
+  stockout: boolean;
+};
+
+export type VendingEvent = {
+  event_type: string;
+  detail: string;
+  occurred_at: string;
+};
+
+export type VendingMachine = {
+  id: number;
+  site_id: number;
+  site_name: string;
+  code: string;
+  name: string;
+  status: string;
+  uptime_pct: number;
+  last_telemetry_at?: string | null;
+  error_code?: string | null;
+  is_seed?: boolean;
+  open_stockouts: number;
+  slots: VendingSlot[];
+  recent_events: VendingEvent[];
 };
 
 export type DashboardSummary = {
@@ -205,6 +284,7 @@ export type ShowRow = {
   price?: number;
   show_no?: number;
   booking_enabled?: boolean;
+  is_private?: boolean;
 };
 
 export type ScheduleGroup = {

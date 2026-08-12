@@ -9,7 +9,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { toast } from "@/components/Toast";
 import {
+  acknowledgeAlert,
   ApiError,
   fetchAssets,
   fetchBookings,
@@ -159,9 +161,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
-  const dismissAlert = useCallback((index: number) => {
-    setAlerts((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+  const dismissAlert = useCallback(
+    (index: number) => {
+      const target = alerts[index];
+      if (!target) return;
+
+      setAlerts((prev) => prev.filter((_, i) => i !== index));
+
+      void (async () => {
+        if (!target.key) {
+          toast(`Alert “${target.title}” disembunyikan lokal (tanpa key CMS).`);
+          return;
+        }
+        try {
+          await acknowledgeAlert(target.key, "acknowledged from dashboard");
+          toast(`Alert “${target.title}” diakui di CMS.`);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Gagal acknowledge";
+          toast(message);
+          await refresh();
+        }
+      })();
+    },
+    [alerts, refresh]
+  );
 
   const logout = useCallback(() => {
     clearToken();

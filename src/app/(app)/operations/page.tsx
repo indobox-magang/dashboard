@@ -1,15 +1,37 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/Alerts";
 import { DeviceList } from "@/components/DeviceList";
 import { PageHead } from "@/components/Filters";
 import { Empty, Leaderboard, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
+import { fetchVendingMachines } from "@/lib/api";
 import { deviceHealth, mapDeviceToRow } from "@/lib/cms";
 import { fmtIDR, fmtPct } from "@/lib/format";
+import type { VendingMachine } from "@/lib/types";
 
 export default function OperationsPage() {
-  const { data, loading, error, alerts, cms } = useDashboard();
+  const { data, loading, error, alerts, cms, siteId } = useDashboard();
+  const [vending, setVending] = useState<VendingMachine[]>([]);
+  const [vendNote, setVendNote] = useState<string | null>(null);
+  const [vendError, setVendError] = useState<string | null>(null);
+
+  const loadVending = useCallback(async () => {
+    try {
+      setVendError(null);
+      const res = await fetchVendingMachines(siteId || undefined);
+      setVending(res.items || []);
+      setVendNote(res.note || null);
+    } catch (err) {
+      setVendError(err instanceof Error ? err.message : "Gagal memuat vending");
+    }
+  }, [siteId]);
+
+  useEffect(() => {
+    void loadVending();
+  }, [loadVending]);
+
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
@@ -31,16 +53,18 @@ export default function OperationsPage() {
     (n, sc) => n + (sc.rows || 0) * (sc.cols || 0),
     0
   );
+  const stockouts = vending.reduce((n, m) => n + (m.open_stockouts || 0), 0);
+  const offlineVend = vending.filter((m) => m.status !== "online").length;
 
   return (
     <div>
       <PageHead
         title="Operasional"
-        subtitle="Efisiensi cabang, device player, dan katalog snack CMS."
+        subtitle="Efisiensi cabang, device player, snack katalog, dan vending (seed / simulasi eksternal)."
       />
       {error ? <ErrorState message={error} /> : null}
       {cms.error ? <ErrorState message={cms.error} /> : null}
-      <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
+      <div className="mb-4 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-1">
         <div className="health-tile">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Device online
@@ -63,6 +87,13 @@ export default function OperationsPage() {
         </div>
         <div className="health-tile">
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Vending issue
+          </span>
+          <b className="mt-1.5 block text-2xl text-white">{offlineVend}</b>
+          <span className="text-xs text-[var(--muted)]">{stockouts} slot stockout</span>
+        </div>
+        <div className="health-tile">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             F&B spend / admission
           </span>
           <b className="mt-1.5 block text-2xl text-white">
@@ -82,11 +113,84 @@ export default function OperationsPage() {
         <Panel>
           <h2 className="m-0 text-base text-white">Device tracker</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Player edge · GET /v1/admin/devices — vending telemetry (Belum ada di cms)
+            Player edge · GET /v1/admin/devices — vending telemetry terpisah di bawah
           </p>
           <DeviceList devices={deviceRows} />
         </Panel>
       </div>
+
+      <Panel className="mt-4">
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="m-0 text-base text-white">Vending machines</h2>
+            <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
+              {vendNote || "Simulated external telemetry (seed) — bukan feed vendor live."}
+            </p>
+          </div>
+        </div>
+        {vendError ? <p className="text-sm text-[var(--danger)]">{vendError}</p> : null}
+        {vending.length ? (
+          <div className="grid gap-3">
+            {vending.map((m) => (
+              <div
+                key={m.id}
+                className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <b className="text-white">{m.name}</b>
+                    <div className="text-xs text-[var(--muted)]">
+                      {m.site_name} · {m.code}
+                      {m.is_seed ? " · SEED" : ""}
+                    </div>
+                  </div>
+                  <div className="text-right text-xs">
+                    <span
+                      className={`font-bold ${
+                        m.status === "online" ? "text-[var(--success)]" : "text-[var(--danger)]"
+                      }`}
+                    >
+                      {m.status.toUpperCase()}
+                    </span>
+                    <div className="text-[var(--muted)]">uptime {fmtPct(m.uptime_pct, 1)}</div>
+                  </div>
+                </div>
+                {m.error_code ? (
+                  <p className="mt-2 mb-0 text-xs text-[var(--danger)]">Error: {m.error_code}</p>
+                ) : null}
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-300">
+                  {(m.slots || []).map((s) => (
+                    <span
+                      key={s.slot_code}
+                      className={`rounded border px-2 py-1 ${
+                        s.stockout
+                          ? "border-[var(--danger)] text-[var(--danger)]"
+                          : "border-[var(--panel-border)]"
+                      }`}
+                    >
+                      {s.slot_code} {s.product_name} ({s.qty_on_hand}/{s.capacity})
+                    </span>
+                  ))}
+                </div>
+                {(m.recent_events || []).length ? (
+                  <div className="mt-2 grid gap-1 text-[11px] text-[var(--muted)]">
+                    {m.recent_events.map((e, i) => (
+                      <div key={`${e.occurred_at}-${i}`}>
+                        [{e.event_type}] {e.detail}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty>
+            Belum ada data vending. Jalankan seed:{" "}
+            <code className="text-[var(--accent)]">scripts/seed-inventory-vending.sql</code>
+          </Empty>
+        )}
+      </Panel>
 
       <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
@@ -143,7 +247,7 @@ export default function OperationsPage() {
             <div className="grid gap-2.5">
               {alerts.slice(0, 3).map((a) => (
                 <div
-                  key={a.title}
+                  key={a.key || a.title}
                   className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3"
                 >
                   <b className="block text-white">{a.title}</b>

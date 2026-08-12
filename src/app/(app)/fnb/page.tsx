@@ -1,15 +1,40 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { ErrorState, LoadingState } from "@/components/Alerts";
 import { PageHead } from "@/components/Filters";
 import { Empty, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
+import { fetchSnackInventory, fetchSnackRestocks } from "@/lib/api";
 import { conic, fmtDelta, fmtIDR, fmtPct } from "@/lib/format";
+import type { SnackInventoryRow, SnackRestockRow } from "@/lib/types";
 
 const COLORS = ["#e8a225", "#3dbe78", "#c8393a", "#5b8def", "#8b7cc9"];
 
 export default function FnbPage() {
-  const { data, loading, error, cms } = useDashboard();
+  const { data, loading, error, siteId, cms } = useDashboard();
+  const [inventory, setInventory] = useState<SnackInventoryRow[]>([]);
+  const [restocks, setRestocks] = useState<SnackRestockRow[]>([]);
+  const [invError, setInvError] = useState<string | null>(null);
+
+  const loadInventory = useCallback(async () => {
+    try {
+      setInvError(null);
+      const [inv, logs] = await Promise.all([
+        fetchSnackInventory(siteId || undefined),
+        fetchSnackRestocks({ siteId: siteId || undefined, limit: 8 }),
+      ]);
+      setInventory(inv.items || []);
+      setRestocks(logs.items || []);
+    } catch (err) {
+      setInvError(err instanceof Error ? err.message : "Gagal memuat inventori");
+    }
+  }, [siteId]);
+
+  useEffect(() => {
+    void loadInventory();
+  }, [loadInventory]);
+
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
@@ -28,12 +53,13 @@ export default function FnbPage() {
   const recentPaid = cms.bookings
     .filter((b) => b.status === "paid" || b.status === "used")
     .slice(0, 8);
+  const lowStock = inventory.filter((x) => x.qty_on_hand <= 5);
 
   return (
     <div>
       <PageHead
         title="F&B Detail"
-        subtitle="Snack dari booking app (booking_snacks). Vending machine (Belum ada di cms)."
+        subtitle="Snack sales dari booking_snacks · stok on-hand dari snack_inventory CMS. Vending (Belum ada di cms)."
       />
       {error ? <ErrorState message={error} /> : null}
       {cms.error ? <ErrorState message={cms.error} /> : null}
@@ -49,6 +75,66 @@ export default function FnbPage() {
         ))}
       </div>
 
+      <Panel className="mb-4">
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="m-0 text-base text-white">Stok on-hand (CMS)</h2>
+            <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
+              booking.snack_inventory · filter cabang mengikuti dashboard
+            </p>
+          </div>
+          {lowStock.length ? (
+            <span className="text-xs font-extrabold text-[var(--danger)]">
+              {lowStock.length} SKU ≤ 5
+            </span>
+          ) : null}
+        </div>
+        {invError ? <p className="text-sm text-[var(--danger)]">{invError}</p> : null}
+        {inventory.length ? (
+          <div className="grid gap-2">
+            {inventory.slice(0, 12).map((row) => (
+              <div
+                key={`${row.site_id}-${row.snack_id}`}
+                className="flex items-center justify-between gap-3 border-t border-[var(--panel-border)] py-2.5 text-sm first:border-t-0"
+              >
+                <div>
+                  <b className="text-white">{row.snack_name}</b>
+                  <div className="text-xs text-[var(--muted)]">{row.site_name}</div>
+                </div>
+                <b
+                  className={`text-sm ${
+                    row.qty_on_hand <= 5 ? "text-[var(--danger)]" : "text-white"
+                  }`}
+                >
+                  {row.qty_on_hand} unit
+                </b>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Empty>Belum ada baris inventori. Restock lewat API CMS dulu.</Empty>
+        )}
+        {restocks.length ? (
+          <div className="mt-4 border-t border-[var(--panel-border)] pt-3">
+            <h3 className="m-0 mb-2 text-sm text-white">Restock terbaru</h3>
+            <div className="grid gap-2">
+              {restocks.map((r) => (
+                <div key={r.id} className="flex justify-between gap-3 text-xs text-[var(--muted)]">
+                  <span>
+                    {r.snack_name} · {r.site_name}
+                    {r.note ? ` — ${r.note}` : ""}
+                  </span>
+                  <span className="text-white">
+                    {r.qty_delta > 0 ? "+" : ""}
+                    {r.qty_delta} → {r.qty_after}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </Panel>
+
       <div className="grid grid-cols-[1.45fr_0.85fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
           <div className="mb-4 flex items-start justify-between gap-4">
@@ -61,127 +147,48 @@ export default function FnbPage() {
             {f.items?.[0] ? <span className="badge badge-ok">{f.items[0].name}</span> : null}
           </div>
           {f.items?.length ? (
-            <>
-              <div className="grid grid-cols-[178px_1fr] items-center gap-5">
-                <div
-                  className="grid aspect-square w-[150px] place-items-center rounded-full"
-                  style={{
-                    background: conic(
-                      f.items.map((x, i) => [x.share_pct || 0, COLORS[i % COLORS.length]])
-                    ),
-                  }}
-                >
-                  <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
-                    Unit terjual
-                    <strong className="block text-[17px] text-white">
-                      {units.toLocaleString("id-ID")}
-                    </strong>
-                  </div>
-                </div>
-                <div className="grid gap-3.5">
-                  {f.items.map((x, i) => (
-                    <div
-                      key={x.name}
-                      className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
-                    >
-                      <i
-                        className="h-2.5 w-2.5 rounded-sm"
-                        style={{ background: COLORS[i % COLORS.length] }}
-                      />
-                      <span>{x.name}</span>
-                      <b className="text-xs text-white">{fmtPct(x.share_pct)}</b>
-                    </div>
-                  ))}
+            <div className="grid grid-cols-[178px_1fr] items-center gap-5">
+              <div
+                className="grid aspect-square w-[150px] place-items-center rounded-full"
+                style={{
+                  background: conic(
+                    f.items.map((x, i) => [x.share_pct || 0, COLORS[i % COLORS.length]])
+                  ),
+                }}
+              >
+                <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
+                  Unit terjual
+                  <strong className="block text-[17px] text-white">
+                    {units.toLocaleString("id-ID")}
+                  </strong>
                 </div>
               </div>
-              <table className="mt-5 w-full border-collapse text-[13px]">
-                <thead>
-                  <tr>
-                    <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
-                      Produk
-                    </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
-                      Unit terjual
-                    </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
-                      Pendapatan
-                    </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500 max-[720px]:hidden">
-                      Pangsa
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {f.items.map((x, i) => (
-                    <tr key={x.name}>
-                      <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
-                        <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-[var(--radius)] bg-[rgba(232,162,37,0.15)] text-[11px] font-extrabold text-[var(--accent)]">
-                          {i + 1}
-                        </span>
-                        {x.name}
-                      </td>
-                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
-                        {(x.units || 0).toLocaleString("id-ID")}
-                      </td>
-                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
-                        {fmtIDR(x.revenue, true)}
-                      </td>
-                      <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-300 max-[720px]:hidden">
-                        {fmtPct(x.share_pct)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
+              <div className="grid gap-3.5">
+                {f.items.map((x, i) => (
+                  <div
+                    key={x.name}
+                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
+                  >
+                    <i
+                      className="h-2.5 w-2.5 rounded-sm"
+                      style={{ background: COLORS[i % COLORS.length] }}
+                    />
+                    <span>{x.name}</span>
+                    <b className="text-xs text-white">
+                      {x.units} · {fmtPct(x.share_pct)}
+                    </b>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (
             <Empty>Belum ada penjualan snack pada periode ini.</Empty>
           )}
         </Panel>
-
         <Panel>
-          <h2 className="m-0 text-base text-white">Konversi pengunjung ke pembelian snack</h2>
+          <h2 className="m-0 text-base text-white">Distribusi jam</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Booking tiket yang menyertakan snack
-          </p>
-          <div
-            className="mx-auto grid aspect-square w-[150px] place-items-center rounded-full"
-            style={{
-              background: conic([
-                [f.attach_pct || 0, "#e8a225"],
-                [100 - (f.attach_pct || 0), "#243552"],
-              ]),
-            }}
-          >
-            <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
-              Attach rate
-              <strong className="block text-[17px] text-white">{fmtPct(f.attach_pct)}</strong>
-            </div>
-          </div>
-          <div className="mt-5 grid gap-3.5">
-            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
-              <i className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />
-              <span>Membeli snack</span>
-              <b className="text-xs text-white">
-                {(f.buyers || 0).toLocaleString("id-ID")} booking
-              </b>
-            </div>
-            <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
-              <i className="h-2.5 w-2.5 rounded-sm bg-[#243552]" />
-              <span>Tanpa snack</span>
-              <b className="text-xs text-white">
-                {Math.max(0, (f.visitors || 0) - (f.buyers || 0)).toLocaleString("id-ID")} booking
-              </b>
-            </div>
-          </div>
-        </Panel>
-      </div>
-
-      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
-        <Panel>
-          <h2 className="m-0 text-base text-white">Waktu pembelian</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Distribusi transaksi snack per slot
+            Peak: {peak ? peak.slot : "—"}
           </p>
           {f.hours?.length ? (
             <div className="grid grid-cols-[178px_1fr] items-center gap-5">
@@ -194,10 +201,8 @@ export default function FnbPage() {
                 }}
               >
                 <div className="grid aspect-square w-[104px] place-items-center rounded-full bg-[var(--card)] text-center text-[11px] text-[var(--muted)]">
-                  Puncak {peak?.slot || "—"}
-                  <strong className="block text-[17px] text-white">
-                    {fmtPct(peak?.pct || 0)}
-                  </strong>
+                  Jam
+                  <strong className="block text-[17px] text-white">{peak?.slot || "—"}</strong>
                 </div>
               </div>
               <div className="grid gap-3.5">
@@ -220,6 +225,9 @@ export default function FnbPage() {
             <Empty>Belum ada distribusi waktu.</Empty>
           )}
         </Panel>
+      </div>
+
+      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
         <Panel>
           <h2 className="m-0 text-base text-white">Katalog snack CMS</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
@@ -245,7 +253,13 @@ export default function FnbPage() {
           ) : (
             <Empty>Katalog snack belum termuat.</Empty>
           )}
-          <div className="mt-2 grid gap-2.5">
+        </Panel>
+        <Panel>
+          <h2 className="m-0 text-base text-white">Catatan F&B</h2>
+          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
+            Sumber: booking_snacks + snack_inventory CMS
+          </p>
+          <div className="grid gap-2.5">
             <div className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3">
               <b className="block text-white">Attach rate berbasis transaksi</b>
               <small className="text-[var(--muted)]">
@@ -260,7 +274,7 @@ export default function FnbPage() {
                 </span>
               </b>
               <small className="text-[var(--muted)]">
-                Metrik F&B di dashboard hanya dari snack yang dipesan lewat aplikasi booking.
+                Counter stock sudah ada di inventori CMS; vending telemetry belum.
               </small>
             </div>
           </div>

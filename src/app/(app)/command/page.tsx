@@ -57,8 +57,12 @@ export default function CommandPage() {
     ["F&B / admission", fmtIDR(k.fnb_per_admission), deltas[4]],
     ["RevPASH", fmtIDR(k.revpash), deltas[5]],
   ];
-  const ticketAmt = (k.net_revenue * (data.mix.ticket_pct || 0)) / 100;
-  const snackAmt = (k.net_revenue * (data.mix.snack_pct || 0)) / 100;
+  const publicPct = data.mix.public_ticket_pct ?? data.mix.ticket_pct ?? 0;
+  const privatePct = data.mix.private_ticket_pct ?? 0;
+  const snackMixPct = data.mix.snack_mix_pct ?? data.mix.snack_pct ?? 0;
+  const publicAmt = (k.net_revenue * publicPct) / 100;
+  const privateAmt = (k.net_revenue * privatePct) / 100;
+  const snackAmt = (k.net_revenue * snackMixPct) / 100;
   const maxTrend = Math.max(1, ...(data.trend || []).map((t) => t.revenue));
   const highAlerts = (data.alerts || []).filter((a) => a.level === "high").length;
 
@@ -118,8 +122,9 @@ export default function CommandPage() {
               className="grid aspect-square w-[150px] place-items-center rounded-full max-[720px]:w-[122px]"
               style={{
                 background: conic([
-                  [data.mix.ticket_pct || 0, "#e8a225"],
-                  [data.mix.snack_pct || 0, "#3dbe78"],
+                  [publicPct, "#e8a225"],
+                  [privatePct, "#7c5cff"],
+                  [snackMixPct, "#3dbe78"],
                 ]),
               }}
             >
@@ -133,16 +138,23 @@ export default function CommandPage() {
             <div className="grid gap-3.5">
               <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
                 <i className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />
-                <span>Tiket</span>
+                <span>Tiket publik</span>
                 <b className="text-xs text-white">
-                  {fmtPct(data.mix.ticket_pct)} · {fmtIDR(ticketAmt, true)}
+                  {fmtPct(publicPct)} · {fmtIDR(publicAmt, true)}
+                </b>
+              </div>
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+                <i className="h-2.5 w-2.5 rounded-sm bg-[#7c5cff]" />
+                <span>Private screening</span>
+                <b className="text-xs text-white">
+                  {fmtPct(privatePct)} · {fmtIDR(privateAmt, true)}
                 </b>
               </div>
               <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
                 <i className="h-2.5 w-2.5 rounded-sm bg-[var(--success)]" />
                 <span>Snack (app)</span>
                 <b className="text-xs text-white">
-                  {fmtPct(data.mix.snack_pct)} · {fmtIDR(snackAmt, true)}
+                  {fmtPct(snackMixPct)} · {fmtIDR(snackAmt, true)}
                 </b>
               </div>
             </div>

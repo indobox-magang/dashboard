@@ -56,9 +56,6 @@ export function Sidebar() {
         }`}
       >
         Konfigurasi Alert
-        <span className="mt-1 block text-[10px] font-medium normal-case tracking-normal text-[var(--accent)]/80">
-          (Belum ada di cms)
-        </span>
       </Link>
       <div className="mx-2 mt-10 rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/20 p-3 text-xs leading-relaxed text-slate-400">
         Live dari indobox-cms

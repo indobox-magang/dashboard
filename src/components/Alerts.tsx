@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "@/components/Toast";
 import { useDashboard } from "@/hooks/useDashboardSummary";
 import type { Alert } from "@/lib/types";
 import { Empty } from "./Leaderboard";
@@ -14,10 +13,10 @@ export function AlertList({
 }) {
   if (!alerts.length) {
     return (
-      <div className="grid grid-cols-[9px_1fr] gap-3 border-t border-[var(--line)] px-5 py-4">
-        <i className="mt-1 h-2.5 w-2.5 rounded-full bg-[#e6a128]" />
+      <div className="grid grid-cols-[9px_1fr] gap-3 border-t border-[var(--panel-border)] px-5 py-4">
+        <i className="mt-1 h-2.5 w-2.5 rounded-full bg-[var(--accent)]" />
         <div>
-          <h3 className="m-0 text-[13px]">Semua alert telah ditangani</h3>
+          <h3 className="m-0 text-[13px] text-white">Semua alert telah ditangani</h3>
           <p className="m-0 mt-1 text-xs text-[var(--muted)]">
             Tidak ada masalah terbuka dari data CMS saat ini.
           </p>
@@ -30,27 +29,26 @@ export function AlertList({
     <>
       {alerts.map((x, i) => (
         <div
-          key={`${x.title}-${i}`}
-          className="grid grid-cols-[9px_1fr_auto] gap-3 border-t border-[var(--line)] px-5 py-4"
+          key={x.key || `${x.title}-${i}`}
+          className="grid grid-cols-[9px_1fr_auto] gap-3 border-t border-[var(--panel-border)] px-5 py-4"
         >
           <i
             className={`mt-1 h-2.5 w-2.5 rounded-full ${
-              x.level === "high" ? "bg-[var(--red)]" : "bg-[#e6a128]"
+              x.level === "high" ? "bg-[var(--danger)]" : "bg-[var(--accent)]"
             }`}
           />
           <div>
-            <h3 className="m-0 text-[13px]">{x.title}</h3>
+            <h3 className="m-0 text-[13px] text-white">{x.title}</h3>
             <p className="m-0 mt-1 text-xs text-[var(--muted)]">{x.detail}</p>
-            <span className="text-[10px] font-extrabold tracking-wide text-[var(--amber)]">
+            <span className="text-[10px] font-extrabold tracking-wide text-[var(--accent)]">
               {x.level === "high" ? "PRIORITAS TINGGI" : "PRIORITAS MENENGAH"}
             </span>
           </div>
           <button
             type="button"
-            className="self-start rounded-md border border-[#cbd8f4] bg-[#f7faff] px-2 py-1.5 text-[11px] font-bold text-[#1658c8]"
+            className="btn-ghost self-start text-[11px] text-[var(--accent)]"
             onClick={() => {
               onDismiss(i);
-              toast(`Alert “${x.title}” telah diakui.`);
             }}
           >
             {x.action}
@@ -64,15 +62,15 @@ export function AlertList({
 export function ActionNeededPanel() {
   const { alerts, dismissAlert } = useDashboard();
   return (
-    <article className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--card)] p-0 shadow-[0_2px_6px_#17233d05]">
+    <article className="card mt-4 overflow-hidden p-0">
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3">
         <div>
-          <h2 className="m-0 text-base tracking-[-0.2px]">Action Needed</h2>
+          <h2 className="m-0 text-base text-white">Action Needed</h2>
           <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
-            Alert dihitung dari data CMS
+            Alert dari CMS · acknowledgement tersimpan di CMS
           </p>
         </div>
-        <span className="text-xs font-extrabold text-[var(--red)]">
+        <span className="text-xs font-extrabold text-[var(--danger)]">
           {alerts.length} alert terbuka
         </span>
       </div>
@@ -87,7 +85,7 @@ export function LoadingState() {
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[#f0d7a9] bg-[#fff8e9] px-4 py-3 text-[#755311]">
+    <div className="notice mb-5" role="alert">
       ⚠ <span>{message}</span>
     </div>
   );

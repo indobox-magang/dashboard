@@ -4,11 +4,7 @@ import { fmtDelta, fmtIDR, fmtPct } from "@/lib/format";
 import type { BranchRow } from "@/lib/types";
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-[10px] border border-dashed border-[var(--line)] px-6 py-6 text-center text-[var(--muted)]">
-      {children}
-    </div>
-  );
+  return <div className="empty-box">{children}</div>;
 }
 
 export function Panel({
@@ -18,13 +14,7 @@ export function Panel({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <article
-      className={`rounded-xl border border-[var(--line)] bg-[var(--card)] p-5 shadow-[0_2px_6px_#17233d05] ${className}`}
-    >
-      {children}
-    </article>
-  );
+  return <article className={`card p-5 ${className}`}>{children}</article>;
 }
 
 export function Leaderboard({ rows }: { rows: BranchRow[] }) {
@@ -33,17 +23,19 @@ export function Leaderboard({ rows }: { rows: BranchRow[] }) {
     <table className="w-full border-collapse text-[13px]">
       <thead>
         <tr>
-          <th className="pb-2.5 text-left text-[11px] font-semibold text-[var(--muted)]">Cabang</th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold text-[var(--muted)]">
+          <th className="pb-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Cabang
+          </th>
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Pendapatan
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold text-[var(--muted)]">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Okupansi
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold text-[var(--muted)]">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             RevPASH
           </th>
-          <th className="hide-sm pb-2.5 text-right text-[11px] font-semibold text-[var(--muted)] max-[720px]:hidden">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 max-[720px]:hidden">
             Perubahan
           </th>
         </tr>
@@ -53,24 +45,24 @@ export function Leaderboard({ rows }: { rows: BranchRow[] }) {
           const d = fmtDelta(r.change_pct);
           return (
             <tr key={r.site_id}>
-              <td className="border-t border-[var(--line)] py-3">
-                <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-md bg-[#ebf2ff] text-[11px] font-extrabold text-[#3461b4]">
+              <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-[var(--radius)] bg-[rgba(232,162,37,0.15)] text-[11px] font-extrabold text-[var(--accent)]">
                   {i + 1}
                 </span>
                 {r.name}
               </td>
-              <td className="border-t border-[var(--line)] py-3 text-right">
+              <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                 {fmtIDR(r.revenue, true)}
               </td>
-              <td className="border-t border-[var(--line)] py-3 text-right">
+              <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-200">
                 {fmtPct(r.occupancy_pct, 0)}
               </td>
-              <td className="border-t border-[var(--line)] py-3 text-right">
+              <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-200">
                 {fmtIDR(r.revpash, true)}
               </td>
               <td
-                className={`border-t border-[var(--line)] py-3 text-right text-xs font-bold max-[720px]:hidden ${
-                  d.down ? "text-[var(--red)]" : "text-[#078168]"
+                className={`border-t border-[var(--panel-border)] py-3 text-right text-xs font-bold max-[720px]:hidden ${
+                  d.down ? "down" : "up"
                 }`}
               >
                 {d.text.replace(" vs periode lalu", "")}

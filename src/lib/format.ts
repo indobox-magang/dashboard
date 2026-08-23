@@ -69,16 +69,16 @@ export function conic(segments: [number, string][]): string {
 }
 
 export function heatClass(v: number): string {
-  if (v >= 85) return "bg-[#245fdb] text-white";
-  if (v >= 72) return "bg-[#6c98fa] text-white";
-  if (v >= 55) return "bg-[#a8c3ff] text-[var(--ink)]";
-  return "bg-[#dce8ff] text-[var(--ink)]";
+  if (v >= 85) return "bg-[var(--accent)] text-[var(--navy-900)]";
+  if (v >= 72) return "bg-[#c88920] text-white";
+  if (v >= 55) return "bg-[#2a4a78] text-white";
+  return "bg-[#1e3458] text-[var(--muted)]";
 }
 
 export function genreClass(value: number): string {
-  if (value >= 80) return "bg-[#0f7a62] text-white";
-  if (value >= 65) return "bg-[#37ad8e] text-white";
-  if (value >= 50) return "bg-[#94d6c2] text-[#12503f]";
-  if (value >= 35) return "bg-[#cfeae1] text-[#1d5f50]";
-  return "bg-[#eef6f3] text-[#5c7a72]";
+  if (value >= 80) return "bg-[var(--success)] text-[var(--navy-900)]";
+  if (value >= 65) return "bg-[#2f9a62] text-white";
+  if (value >= 50) return "bg-[#246b4a] text-white";
+  if (value >= 35) return "bg-[#1d4a38] text-[#9fd4b8]";
+  return "bg-[#162e28] text-[var(--muted)]";
 }

@@ -44,7 +44,7 @@ export default function OptimizerPage() {
           Keputusan dari jadwal/booking <b>indobox-cms</b> · heatmap summary · jadwal/assets/screens
           dari endpoint CMS admin.
         </span>
-        <span className="ml-auto text-xs font-bold text-[#5e4106]">
+        <span className="ml-auto text-xs font-bold text-[var(--accent-hover)]">
           {cms.screens.length} screen · {seatCapacity} seats · {cms.assets.length} feature assets
         </span>
       </div>

@@ -23,19 +23,19 @@ export function Leaderboard({ rows }: { rows: BranchRow[] }) {
     <table className="w-full border-collapse text-[13px]">
       <thead>
         <tr>
-          <th className="pb-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <th className="pb-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Cabang
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Pendapatan
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Okupansi
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             RevPASH
           </th>
-          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500 max-[720px]:hidden">
+          <th className="pb-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] max-[720px]:hidden">
             Perubahan
           </th>
         </tr>
@@ -45,7 +45,7 @@ export function Leaderboard({ rows }: { rows: BranchRow[] }) {
           const d = fmtDelta(r.change_pct);
           return (
             <tr key={r.site_id}>
-              <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+              <td className="border-t border-[var(--panel-border)] py-3 text-[var(--foreground)]">
                 <span className="mr-1.5 inline-grid h-[22px] w-[22px] place-items-center rounded-[var(--radius)] bg-[rgba(232,162,37,0.15)] text-[11px] font-extrabold text-[var(--accent)]">
                   {i + 1}
                 </span>
@@ -54,10 +54,10 @@ export function Leaderboard({ rows }: { rows: BranchRow[] }) {
               <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                 {fmtIDR(r.revenue, true)}
               </td>
-              <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-200">
+              <td className="border-t border-[var(--panel-border)] py-3 text-right text-[var(--foreground)]">
                 {fmtPct(r.occupancy_pct, 0)}
               </td>
-              <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-200">
+              <td className="border-t border-[var(--panel-border)] py-3 text-right text-[var(--foreground)]">
                 {fmtIDR(r.revpash, true)}
               </td>
               <td

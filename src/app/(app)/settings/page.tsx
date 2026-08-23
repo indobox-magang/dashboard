@@ -171,7 +171,7 @@ export default function SettingsPage() {
           </div>
           <button
             type="button"
-            className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-3 py-2 text-xs font-bold text-[#1a1205]"
+            className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-3 py-2 text-xs font-bold text-[var(--navy-900)]"
             onClick={() => {
               void refresh();
               toast("Memuat ulang summary + katalog CMS…");
@@ -182,18 +182,18 @@ export default function SettingsPage() {
         </div>
         <div className="mb-3 flex flex-wrap gap-2 text-xs">
           <span
-            className={`rounded-full px-2.5 py-1 font-bold ${
+            className={`badge px-2.5 py-1 font-bold ${
               cms.healthOk
-                ? "bg-[#e3f7ef] text-[#08745d]"
+                ? "badge-ok"
                 : cms.healthOk === false
-                  ? "bg-[#fde8ea] text-[var(--red)]"
-                  : "bg-[#eef1f6] text-[var(--muted)]"
+                  ? "badge-danger"
+                  : "bg-[rgba(255,255,255,0.06)] text-[var(--muted)]"
             }`}
           >
             /health {cms.healthOk ? "ok" : cms.healthOk === false ? "down" : "—"}
           </span>
           {cms.loading ? (
-            <span className="rounded-full bg-[#eef1f6] px-2.5 py-1 font-bold text-[var(--muted)]">
+            <span className="badge bg-[rgba(255,255,255,0.06)] px-2.5 py-1 font-bold text-[var(--muted)]">
               Memuat katalog…
             </span>
           ) : null}
@@ -210,12 +210,12 @@ export default function SettingsPage() {
             {cms.endpoints.length ? (
               cms.endpoints.map((ep) => (
                 <tr key={ep.key}>
-                  <td className="border-t border-[var(--panel-border)] py-2 text-slate-200">
+                  <td className="border-t border-[var(--panel-border)] py-2 text-[var(--foreground)]">
                     {ep.key === "health" ? "/health" : `/v1/admin/${ep.key}`}
                   </td>
                   <td
                     className={`border-t border-[var(--panel-border)] py-2 text-right font-bold ${
-                      ep.ok ? "text-[#08745d]" : "text-[var(--red)]"
+                      ep.ok ? "text-[var(--success)]" : "text-[var(--red)]"
                     }`}
                   >
                     {ep.ok ? "ok" : ep.error || "fail"}
@@ -266,7 +266,7 @@ export default function SettingsPage() {
                 onClick={() => toggleCatalogue(row.key)}
               >
                 <i
-                  className={`absolute top-[3px] h-[17px] w-[17px] rounded-full bg-white transition ${
+                  className={`absolute top-[3px] h-[17px] w-[17px] rounded-full bg-[var(--foreground)] transition ${
                     settings.catalogue[row.key] ? "left-[21px]" : "left-[3px]"
                   }`}
                 />
@@ -290,7 +290,7 @@ export default function SettingsPage() {
               key={key}
               className="flex items-center justify-between gap-4 border-t border-[var(--panel-border)] py-3.5 first:border-t-0"
             >
-              <span className="text-slate-200">{label}</span>
+              <span className="text-[var(--foreground)]">{label}</span>
               <div className="flex items-center gap-2 text-[var(--muted)]">
                 <input
                   className="input w-[78px] text-right"
@@ -320,7 +320,7 @@ export default function SettingsPage() {
           Channel live: booking app + CMS schedule + edge player. Entitas dipakai vs belum ada di
           CMS — detail: docs/DATA-CONTRACT.md.
         </p>
-        <div className="mb-3 grid gap-2 text-sm text-slate-200">
+        <div className="mb-3 grid gap-2 text-sm text-[var(--foreground)]">
           <div className="text-[var(--muted)]">
             Vending machine / stockout / telemetry —{" "}
             <span className="text-[var(--accent)]">seed simulasi di CMS (bukan vendor live)</span>

@@ -66,7 +66,7 @@ export default function OperationsPage() {
       {cms.error ? <ErrorState message={cms.error} /> : null}
       <div className="mb-4 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-1">
         <div className="health-tile">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
             Device online
           </span>
           <b className="mt-1.5 block text-2xl text-white">{fmtPct(health.onlinePct, 0)}</b>
@@ -75,7 +75,7 @@ export default function OperationsPage() {
           </span>
         </div>
         <div className="health-tile">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
             Kapasitas studio
           </span>
           <b className="mt-1.5 block text-2xl text-white">
@@ -86,14 +86,14 @@ export default function OperationsPage() {
           </span>
         </div>
         <div className="health-tile">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
             Vending issue
           </span>
           <b className="mt-1.5 block text-2xl text-white">{offlineVend}</b>
           <span className="text-xs text-[var(--muted)]">{stockouts} slot stockout</span>
         </div>
         <div className="health-tile">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
             F&B spend / admission
           </span>
           <b className="mt-1.5 block text-2xl text-white">
@@ -158,7 +158,7 @@ export default function OperationsPage() {
                 {m.error_code ? (
                   <p className="mt-2 mb-0 text-xs text-[var(--danger)]">Error: {m.error_code}</p>
                 ) : null}
-                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-300">
+                <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[var(--muted)]">
                   {(m.slots || []).map((s) => (
                     <span
                       key={s.slot_code}
@@ -202,13 +202,13 @@ export default function OperationsPage() {
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Produk
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Harga
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Status
                   </th>
                 </tr>
@@ -216,7 +216,7 @@ export default function OperationsPage() {
               <tbody>
                 {snacks.map((s) => (
                   <tr key={s.id}>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-[var(--foreground)]">
                       {s.name}
                       {s.size ? (
                         <small className="ml-1 text-[var(--muted)]">({s.size})</small>

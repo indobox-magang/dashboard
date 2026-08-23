@@ -86,7 +86,7 @@ export default function CommandPage() {
             <b>/sites · /devices · /shows · /bookings</b>
           </span>
         )}
-        <span className="ml-auto text-xs font-bold text-[#5e4106]">
+        <span className="ml-auto text-xs font-bold text-[var(--accent-hover)]">
           Player {health.onlineN}/{health.total || deviceRows.length} online ·{" "}
           {paidBookings.length} booking paid/used
         </span>
@@ -95,7 +95,7 @@ export default function CommandPage() {
       <div className="grid grid-cols-6 gap-3 max-[1100px]:grid-cols-3 max-[720px]:grid-cols-2">
         {cards.map((x) => (
           <article key={x[0]} className="card p-4">
-            <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <div className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               {x[0]}
             </div>
             <div className="my-2 text-[22px] font-semibold tracking-[-0.7px] whitespace-nowrap text-white max-[720px]:text-[19px]">
@@ -136,21 +136,21 @@ export default function CommandPage() {
               </div>
             </div>
             <div className="grid gap-3.5">
-              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-[var(--foreground)]">
                 <i className="h-2.5 w-2.5 rounded-sm bg-[var(--accent)]" />
                 <span>Tiket publik</span>
                 <b className="text-xs text-white">
                   {fmtPct(publicPct)} · {fmtIDR(publicAmt, true)}
                 </b>
               </div>
-              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-[var(--foreground)]">
                 <i className="h-2.5 w-2.5 rounded-sm bg-[#7c5cff]" />
                 <span>Private screening</span>
                 <b className="text-xs text-white">
                   {fmtPct(privatePct)} · {fmtIDR(privateAmt, true)}
                 </b>
               </div>
-              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200">
+              <div className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-[var(--foreground)]">
                 <i className="h-2.5 w-2.5 rounded-sm bg-[var(--success)]" />
                 <span>Snack (app)</span>
                 <b className="text-xs text-white">

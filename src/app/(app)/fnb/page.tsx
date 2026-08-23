@@ -66,7 +66,7 @@ export default function FnbPage() {
       <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
         {summary.map((s) => (
           <div key={s[0]} className="health-tile">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               {s[0]}
             </span>
             <b className="mt-1.5 block text-2xl text-white">{s[1]}</b>
@@ -167,7 +167,7 @@ export default function FnbPage() {
                 {f.items.map((x, i) => (
                   <div
                     key={x.name}
-                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
+                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-[var(--foreground)]"
                   >
                     <i
                       className="h-2.5 w-2.5 rounded-sm"
@@ -209,7 +209,7 @@ export default function FnbPage() {
                 {f.hours.map((x, i) => (
                   <div
                     key={x.slot}
-                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-slate-200"
+                    className="grid grid-cols-[9px_1fr_auto] items-center gap-2 text-[13px] text-[var(--foreground)]"
                   >
                     <i
                       className="h-2.5 w-2.5 rounded-sm"
@@ -240,7 +240,7 @@ export default function FnbPage() {
                   key={s.id}
                   className="flex items-center justify-between gap-2 border-t border-[var(--panel-border)] py-2 first:border-t-0 first:pt-0"
                 >
-                  <span className="text-slate-200">
+                  <span className="text-[var(--foreground)]">
                     {s.name}
                     <small className="ml-1 text-[var(--muted)]">
                       {s.available ? "available" : "unavailable"}
@@ -299,10 +299,10 @@ export default function FnbPage() {
             <tbody>
               {recentPaid.map((b) => (
                 <tr key={b.id}>
-                  <td className="border-t border-[var(--panel-border)] py-2.5 text-slate-200">
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-[var(--foreground)]">
                     {b.code}
                   </td>
-                  <td className="border-t border-[var(--panel-border)] py-2.5 text-slate-200">
+                  <td className="border-t border-[var(--panel-border)] py-2.5 text-[var(--foreground)]">
                     {b.movie_title || "—"}
                   </td>
                   <td className="border-t border-[var(--panel-border)] py-2.5 text-right text-white">

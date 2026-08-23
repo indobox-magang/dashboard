@@ -54,7 +54,7 @@ export function CmsInventoryStrip() {
           },
         ].map((k) => (
           <div key={k.label} className="health-tile">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               {k.label}
             </span>
             <b className="mt-1.5 block text-2xl text-white">{k.value}</b>

@@ -86,7 +86,7 @@ export default function CmsPage() {
       <div className="mb-4 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-2">
         {kpis.map((k) => (
           <div key={k.label} className="health-tile">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
               {k.label}
             </span>
             <b className="mt-1.5 block text-2xl text-white">{k.value}</b>
@@ -105,19 +105,19 @@ export default function CmsPage() {
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Kode
                   </th>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Film
                   </th>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500 max-[720px]:hidden">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)] max-[720px]:hidden">
                     Kota
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Total
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Status
                   </th>
                 </tr>
@@ -125,14 +125,14 @@ export default function CmsPage() {
               <tbody>
                 {recentBookings.map((b) => (
                   <tr key={b.id}>
-                    <td className="border-t border-[var(--panel-border)] py-3 font-mono text-xs text-slate-300">
+                    <td className="border-t border-[var(--panel-border)] py-3 font-mono text-xs text-[var(--muted)]">
                       {b.code}
                     </td>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-[var(--foreground)]">
                       <div>{b.movie_title || "—"}</div>
                       <small className="text-[var(--muted)]">{b.user_name}</small>
                     </td>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-300 max-[720px]:hidden">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-[var(--muted)] max-[720px]:hidden">
                       {b.city || "—"}
                     </td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
@@ -215,13 +215,13 @@ export default function CmsPage() {
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Nama
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Harga
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Status
                   </th>
                 </tr>
@@ -229,7 +229,7 @@ export default function CmsPage() {
               <tbody>
                 {data.snacks.slice(0, 10).map((s) => (
                   <tr key={s.id}>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-[var(--foreground)]">
                       {s.name}
                     </td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
@@ -254,7 +254,7 @@ export default function CmsPage() {
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
             Devices · assets · banners · staff
           </p>
-          <div className="grid gap-2 text-sm text-slate-200">
+          <div className="grid gap-2 text-sm text-[var(--foreground)]">
             <div className="flex justify-between border-b border-[var(--panel-border)] py-2">
               <span>Device online</span>
               <b className="text-white">
@@ -341,13 +341,13 @@ export default function CmsPage() {
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Nama
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Tier
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--muted)]">
                     Booking
                   </th>
                 </tr>
@@ -355,10 +355,10 @@ export default function CmsPage() {
               <tbody>
                 {topCustomers.map((c) => (
                   <tr key={c.id}>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-[var(--foreground)]">
                       {c.name}
                     </td>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-300">
+                    <td className="border-t border-[var(--panel-border)] py-3 text-right text-[var(--muted)]">
                       {c.tier || "—"}
                     </td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">

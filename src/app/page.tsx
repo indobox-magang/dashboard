@@ -10,6 +10,8 @@ export default function HomePage() {
     router.replace(hasToken() ? "/command" : "/login");
   }, [router]);
   return (
-    <div className="grid min-h-screen place-items-center text-[var(--muted)]">Mengalihkan…</div>
+    <div className="grid min-h-screen place-items-center bg-[var(--bg)] text-[var(--muted)]">
+      Mengalihkan…
+    </div>
   );
 }

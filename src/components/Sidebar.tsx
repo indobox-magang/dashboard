@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/BrandLogo";
+import { CornerMotif } from "@/components/CornerMotif";
 import { useDashboard } from "@/hooks/useDashboardSummary";
 import { periodLabel } from "@/lib/format";
 
 const NAV = [
-  { href: "/command", label: "Command Center" },
-  { href: "/operations", label: "Operasional" },
-  { href: "/fnb", label: "F&B Detail" },
-  { href: "/optimizer", label: "Optimizer Showtime" },
+  { href: "/command", label: "Command Center", icon: "dashboard" },
+  { href: "/operations", label: "Operasional", icon: "monitoring" },
+  { href: "/fnb", label: "F&B Detail", icon: "fastfood" },
+  { href: "/optimizer", label: "Optimizer Showtime", icon: "event_note" },
+  { href: "/cms", label: "Data CMS", icon: "database" },
 ];
 
 export function Sidebar() {
@@ -17,53 +20,71 @@ export function Sidebar() {
   const { data, period, logout } = useDashboard();
 
   return (
-    <aside className="bg-[var(--nav)] px-[17px] py-7 text-[#b7c4d8] max-[720px]:hidden">
-      <div className="mb-9 ml-2.5 flex items-center gap-2.5 text-xl font-extrabold text-white">
-        <span className="grid h-[29px] w-[29px] place-items-center rounded-[9px] bg-[#62d8bd] text-base text-[var(--nav)]">
-          i
-        </span>
-        indobox
+    <aside className="relative flex h-full w-[260px] shrink-0 flex-col overflow-y-auto overflow-x-hidden border-r border-[var(--panel-border)] bg-[var(--sidebar)] py-6 max-[720px]:hidden">
+      <div className="mb-10 px-6">
+        <BrandLogo href="/command" height={26} subtitle="Business Dashboard" />
       </div>
-      <div className="mx-2.5 mb-2 mt-6 text-[10px] font-extrabold tracking-[0.12em] text-[#71819a]">
+
+      <div className="mb-2 px-6 text-[10px] font-bold tracking-[0.14em] text-[var(--muted)]">
         DASHBOARD
       </div>
-      {NAV.map((item) => {
-        const active = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`mb-0.5 block w-full rounded-lg px-3 py-2.5 text-left no-underline ${
-              active ? "bg-[var(--nav2)] font-bold text-white" : "text-inherit"
-            }`}
-          >
-            {item.label}
-          </Link>
-        );
-      })}
-      <div className="mx-2.5 mb-2 mt-6 text-[10px] font-extrabold tracking-[0.12em] text-[#71819a]">
+      <nav className="flex flex-col gap-0.5">
+        {NAV.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors duration-150 ${
+                active
+                  ? "border-l-2 border-[var(--accent)] bg-[var(--sidebar-active)] pl-[22px] text-[var(--accent)]"
+                  : "text-[var(--muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--foreground)]"
+              }`}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+                {item.icon}
+              </span>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="mb-2 mt-6 px-6 text-[10px] font-bold tracking-[0.14em] text-[var(--muted)]">
         PENGATURAN
       </div>
       <Link
         href="/settings"
-        className={`mb-0.5 block w-full rounded-lg px-3 py-2.5 text-left no-underline ${
-          pathname === "/settings" ? "bg-[var(--nav2)] font-bold text-white" : "text-inherit"
+        className={`flex items-center gap-3 px-6 py-3 text-sm font-semibold transition-colors duration-150 ${
+          pathname === "/settings"
+            ? "border-l-2 border-[var(--accent)] bg-[var(--sidebar-active)] pl-[22px] text-[var(--accent)]"
+            : "text-[var(--muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--foreground)]"
         }`}
       >
-        Konfigurasi Alert
+        <span className="material-symbols-outlined" style={{ fontSize: 20 }}>
+          settings
+        </span>
+        <span>Konfigurasi Alert</span>
       </Link>
-      <div className="mx-2 mt-10 rounded-[9px] border border-[#2b3c59] p-3 text-xs leading-relaxed text-[#9baac0]">
-        Live dari indobox-cms
-        <br />
-        {data?.label || "—"} · {periodLabel(period)}
+
+      <div className="relative z-[1] mt-auto space-y-3 px-6 pt-8">
+        <div className="rounded border border-[var(--panel-border)] bg-black/20 p-3 text-xs leading-relaxed text-[var(--muted)]">
+          Live dari indobox-cms
+          <br />
+          {data?.label || "—"} · {periodLabel(period)}
+        </div>
+        <button
+          type="button"
+          onClick={logout}
+          className="btn-ghost flex w-full items-center justify-center gap-2"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+            logout
+          </span>
+          Keluar
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={logout}
-        className="mx-2 mt-3 w-[calc(100%-16px)] rounded-lg border border-[#2b3c59] bg-transparent px-3 py-2 text-xs font-semibold text-[#b7c4d8]"
-      >
-        Keluar
-      </button>
+      <CornerMotif size={56} />
     </aside>
   );
 }

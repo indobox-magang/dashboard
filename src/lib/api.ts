@@ -78,13 +78,28 @@ export async function loginAdmin(email: string, password: string) {
   );
 }
 
+/**
+ * KPI summary from the dashboard BFF (queries shared CMS Postgres).
+ * CMS branch `one-script-2` does not mount `/v1/admin/dashboard/summary`
+ * (that route lives on cms `kye`/`radit`); keep using same-origin BFF.
+ */
 export async function fetchDashboardSummary(opts: {
   period: PeriodKey;
   siteId?: string;
 }) {
   const params = new URLSearchParams({ period: opts.period });
   if (opts.siteId) params.set("site_id", opts.siteId);
-  return api<DashboardSummary>(`/v1/admin/dashboard/summary?${params}`);
+  const headers = new Headers();
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`/api/dashboard/summary?${params}`, { headers });
+  const body = (await res.json().catch(() => ({}))) as DashboardSummary & {
+    error?: string;
+  };
+  if (!res.ok) {
+    throw new ApiError(body.error || res.statusText || "request failed", res.status);
+  }
+  return body;
 }
 
 export async function fetchHealth(): Promise<{ status: string }> {

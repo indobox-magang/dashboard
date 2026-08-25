@@ -3,7 +3,9 @@
 import { ErrorState, LoadingState } from "@/components/Alerts";
 import { PageHead } from "@/components/Filters";
 import { Empty, Panel } from "@/components/Leaderboard";
-import { formatBytes, isDeviceOnline, useCmsSnapshot } from "@/hooks/useCmsSnapshot";
+import { formatBytes, useCmsSnapshot } from "@/hooks/useCmsSnapshot";
+import { useDashboard } from "@/hooks/useDashboardSummary";
+import { isDeviceOnline } from "@/lib/deviceOnline";
 import { fmtIDR } from "@/lib/format";
 
 function statusTone(status: string) {
@@ -13,13 +15,16 @@ function statusTone(status: string) {
 }
 
 export default function CmsPage() {
+  const { deviceOnlineWindowMinutes } = useDashboard();
   const { data, loading, error, refresh } = useCmsSnapshot();
 
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
 
-  const online = data.devices.filter((d) => isDeviceOnline(d.last_heartbeat_at)).length;
+  const online = data.devices.filter((d) =>
+    isDeviceOnline(d.last_heartbeat_at, deviceOnlineWindowMinutes)
+  ).length;
   const activePromos = data.promos.filter((p) => p.active === 1);
   const activeBanners = data.banners.filter((b) => b.active === 1);
   const availableSnacks = data.snacks.filter((s) => s.available === 1);
@@ -283,7 +288,7 @@ export default function CmsPage() {
           {data.devices.length ? (
             <div className="mt-4 grid gap-2">
               {data.devices.slice(0, 5).map((d) => {
-                const on = isDeviceOnline(d.last_heartbeat_at);
+                const on = isDeviceOnline(d.last_heartbeat_at, deviceOnlineWindowMinutes);
                 return (
                   <div
                     key={d.id}

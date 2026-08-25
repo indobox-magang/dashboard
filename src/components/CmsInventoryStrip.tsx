@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useDashboard } from "@/hooks/useDashboardSummary";
-import { formatBytes, isDeviceOnline, useCmsSnapshot } from "@/hooks/useCmsSnapshot";
+import { formatBytes, useCmsSnapshot } from "@/hooks/useCmsSnapshot";
+import { isDeviceOnline } from "@/lib/deviceOnline";
 
 /** Compact strip of live CMS inventory counts for Command Center. */
 export function CmsInventoryStrip() {
-  const { data: summary } = useDashboard();
+  const { data: summary, deviceOnlineWindowMinutes } = useDashboard();
   const { data, loading } = useCmsSnapshot();
 
   if (loading && !data) {
@@ -21,7 +22,9 @@ export function CmsInventoryStrip() {
 
   if (!data) return null;
 
-  const online = data.devices.filter((d) => isDeviceOnline(d.last_heartbeat_at)).length;
+  const online = data.devices.filter((d) =>
+    isDeviceOnline(d.last_heartbeat_at, deviceOnlineWindowMinutes)
+  ).length;
   const empty = !data.sites.length;
 
   return (

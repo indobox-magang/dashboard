@@ -98,6 +98,7 @@ export default function SettingsPage() {
         updated_at: saved.updated_at,
       });
       toast("Pengaturan alert disimpan ke CMS.");
+      await refresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Gagal menyimpan";
       setError(message);

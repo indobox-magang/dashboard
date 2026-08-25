@@ -12,7 +12,7 @@ import { fmtIDR, fmtPct } from "@/lib/format";
 import type { VendingMachine } from "@/lib/types";
 
 export default function OperationsPage() {
-  const { data, loading, error, alerts, cms, siteId } = useDashboard();
+  const { data, loading, error, alerts, cms, siteId, deviceOnlineWindowMinutes } = useDashboard();
   const [vending, setVending] = useState<VendingMachine[]>([]);
   const [vendNote, setVendNote] = useState<string | null>(null);
   const [vendError, setVendError] = useState<string | null>(null);
@@ -37,10 +37,10 @@ export default function OperationsPage() {
   if (!data) return <LoadingState />;
 
   const deviceRows = cms.devices.length
-    ? cms.devices.map(mapDeviceToRow)
+    ? cms.devices.map((d) => mapDeviceToRow(d, deviceOnlineWindowMinutes))
     : data.devices || [];
   const health = cms.devices.length
-    ? deviceHealth(cms.devices)
+    ? deviceHealth(cms.devices, deviceOnlineWindowMinutes)
     : {
         onlinePct: data.health.device_online_pct,
         offline: data.health.devices_offline,

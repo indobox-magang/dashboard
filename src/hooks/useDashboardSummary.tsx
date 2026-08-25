@@ -13,6 +13,7 @@ import { toast } from "@/components/Toast";
 import {
   acknowledgeAlert,
   ApiError,
+  fetchAlertSettings,
   fetchAssets,
   fetchBookings,
   fetchDashboardSummary,
@@ -24,6 +25,7 @@ import {
   fetchSnacks,
 } from "@/lib/api";
 import type { CmsCatalog, CmsEndpointStatus } from "@/lib/cms";
+import { DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES } from "@/lib/deviceOnline";
 import { clearToken, hasToken } from "@/lib/auth";
 import type { Alert, DashboardSummary, PeriodKey } from "@/lib/types";
 
@@ -35,6 +37,7 @@ type DashboardContextValue = {
   siteId: string;
   alerts: Alert[];
   cms: CmsCatalog;
+  deviceOnlineWindowMinutes: number;
   setPeriod: (p: PeriodKey) => void;
   setSiteId: (id: string) => void;
   dismissAlert: (index: number) => void;
@@ -86,6 +89,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [siteId, setSiteId] = useState("");
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [cms, setCms] = useState<CmsCatalog>(emptyCms);
+  const [deviceOnlineWindowMinutes, setDeviceOnlineWindowMinutes] = useState(
+    DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES
+  );
 
   const refresh = useCallback(async () => {
     if (!hasToken()) {
@@ -114,7 +120,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
 
     const siteFilter = siteId || undefined;
-    const [sites, screens, devices, shows, assets, snacks, bookings] =
+    const [sites, screens, devices, shows, assets, snacks, bookings, alertSettings] =
       await Promise.all([
         loadOne("sites", fetchSites, endpoints),
         loadOne("screens", () => fetchScreens(siteFilter), endpoints),
@@ -123,8 +129,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         loadOne("assets", () => fetchAssets("feature"), endpoints),
         loadOne("snacks", fetchSnacks, endpoints),
         loadOne("bookings", fetchBookings, endpoints),
+        loadOne("alert-settings", fetchAlertSettings, endpoints),
       ]);
     await loadOne("health", fetchHealth, endpoints);
+
+    const windowMinutes = alertSettings?.thresholds?.device_online_window_minutes;
+    setDeviceOnlineWindowMinutes(
+      typeof windowMinutes === "number" && windowMinutes > 0
+        ? windowMinutes
+        : DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES
+    );
 
     const failed = endpoints.filter((e) => !e.ok && e.key !== "health");
     const siteList = sites ?? [];
@@ -200,13 +214,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       siteId,
       alerts,
       cms,
+      deviceOnlineWindowMinutes,
       setPeriod,
       setSiteId,
       dismissAlert,
       refresh,
       logout,
     }),
-    [data, loading, error, period, siteId, alerts, cms, dismissAlert, refresh, logout]
+    [data, loading, error, period, siteId, alerts, cms, deviceOnlineWindowMinutes, dismissAlert, refresh, logout]
   );
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

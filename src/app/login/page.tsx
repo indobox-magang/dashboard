@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CornerMotif } from "@/components/CornerMotif";
-import { loginAdmin } from "@/lib/api";
+import { loginAdmin, getApiUrl } from "@/lib/api";
 import { hasToken, setToken } from "@/lib/auth";
 
 export default function LoginPage() {
@@ -77,7 +77,7 @@ export default function LoginPage() {
         </button>
 
         <p className="m-0 text-[11px] text-[var(--muted)]">
-          API: {process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_CMS_API_URL || "http://localhost:8081"}
+          API: {getApiUrl()}
         </p>
       </form>
     </div>

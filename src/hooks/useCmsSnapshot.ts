@@ -39,13 +39,6 @@ export function useCmsSnapshot() {
   return { data, loading, error, refresh };
 }
 
-export function isDeviceOnline(lastHeartbeat?: string): boolean {
-  if (!lastHeartbeat) return false;
-  const t = new Date(lastHeartbeat).getTime();
-  if (Number.isNaN(t)) return false;
-  return Date.now() - t < 120_000;
-}
-
 export function formatBytes(n: number): string {
   if (!n) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];

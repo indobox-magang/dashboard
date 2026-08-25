@@ -24,16 +24,16 @@ function Spark({ down }: { down: boolean }) {
 }
 
 export default function CommandPage() {
-  const { data, loading, error, period, cms } = useDashboard();
+  const { data, loading, error, period, cms, deviceOnlineWindowMinutes } = useDashboard();
 
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
 
   const deviceRows = cms.devices.length
-    ? cms.devices.map(mapDeviceToRow)
+    ? cms.devices.map((d) => mapDeviceToRow(d, deviceOnlineWindowMinutes))
     : data.devices || [];
-  const health = deviceHealth(cms.devices);
+  const health = deviceHealth(cms.devices, deviceOnlineWindowMinutes);
   const upcomingShows = [...cms.shows]
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
     .slice(0, 6);

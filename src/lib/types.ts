@@ -82,6 +82,7 @@ export type DeviceRow = {
 export type Heatmap = {
   days: string[];
   slots: string[];
+  /** Occupancy % as `cells[dayIndex][slotIndex]` (CMS `dashHeat`). */
   cells: number[][];
 };
 

@@ -67,15 +67,18 @@ export default function OptimizerPage() {
               {heat.slots.map((slot, si) => (
                 <div key={slot} className="contents">
                   <span className="text-[var(--muted)]">{slot}</span>
-                  {(heat.cells[si] || []).map((v, di) => (
-                    <button
-                      key={`${slot}-${di}`}
-                      type="button"
-                      className={`min-h-9 rounded-[var(--radius)] border-0 font-semibold ${heatClass(v)}`}
-                    >
-                      {Math.round(v)}%
-                    </button>
-                  ))}
+                  {heat.days.map((day, di) => {
+                    const v = heat.cells[di]?.[si] ?? 0;
+                    return (
+                      <button
+                        key={`${day}-${slot}`}
+                        type="button"
+                        className={`min-h-9 rounded-[var(--radius)] border-0 font-semibold ${heatClass(v)}`}
+                      >
+                        {Math.round(v)}%
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>

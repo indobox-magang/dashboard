@@ -141,7 +141,7 @@ export default function FnbPage() {
             <div>
               <h2 className="m-0 text-base text-white">Item terlaris</h2>
               <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
-                Pangsa unit terjual · {data.label}
+                Pangsa pendapatan · {data.label}
               </p>
             </div>
             {f.items?.[0] ? <span className="badge badge-ok">{f.items[0].name}</span> : null}

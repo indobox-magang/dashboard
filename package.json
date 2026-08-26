@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint",
+    "test": "node --experimental-strip-types --test src/lib/deviceOnline.test.ts",
     "seed": "node scripts/seed-demo.mjs"
   },
   "dependencies": {

@@ -79,9 +79,9 @@ export async function loginAdmin(email: string, password: string) {
 }
 
 /**
- * KPI summary from the dashboard BFF (queries shared CMS Postgres).
- * CMS branch `one-script-2` does not mount `/v1/admin/dashboard/summary`
- * (that route lives on cms `kye`/`radit`); keep using same-origin BFF.
+ * KPI summary from CMS admin API (shared Postgres).
+ * Prefer this over the local BFF now that CMS destin-embun mounts
+ * GET /v1/admin/dashboard/summary (alerts with stable keys, private mix).
  */
 export async function fetchDashboardSummary(opts: {
   period: PeriodKey;
@@ -89,17 +89,7 @@ export async function fetchDashboardSummary(opts: {
 }) {
   const params = new URLSearchParams({ period: opts.period });
   if (opts.siteId) params.set("site_id", opts.siteId);
-  const headers = new Headers();
-  const token = getToken();
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-  const res = await fetch(`/api/dashboard/summary?${params}`, { headers });
-  const body = (await res.json().catch(() => ({}))) as DashboardSummary & {
-    error?: string;
-  };
-  if (!res.ok) {
-    throw new ApiError(body.error || res.statusText || "request failed", res.status);
-  }
-  return body;
+  return api<DashboardSummary>(`/v1/admin/dashboard/summary?${params}`);
 }
 
 export async function fetchHealth(): Promise<{ status: string }> {

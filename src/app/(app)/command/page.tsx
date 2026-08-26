@@ -24,16 +24,16 @@ function Spark({ down }: { down: boolean }) {
 }
 
 export default function CommandPage() {
-  const { data, loading, error, period, cms } = useDashboard();
+  const { data, loading, error, period, cms, deviceOnlineWindowMinutes } = useDashboard();
 
   if (loading && !data) return <LoadingState />;
   if (error && !data) return <ErrorState message={error} />;
   if (!data) return <LoadingState />;
 
   const deviceRows = cms.devices.length
-    ? cms.devices.map(mapDeviceToRow)
+    ? cms.devices.map((d) => mapDeviceToRow(d, deviceOnlineWindowMinutes))
     : data.devices || [];
-  const health = deviceHealth(cms.devices);
+  const health = deviceHealth(cms.devices, deviceOnlineWindowMinutes);
   const upcomingShows = [...cms.shows]
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
     .slice(0, 6);
@@ -60,9 +60,9 @@ export default function CommandPage() {
   const publicPct = data.mix.public_ticket_pct ?? data.mix.ticket_pct ?? 0;
   const privatePct = data.mix.private_ticket_pct ?? 0;
   const snackMixPct = data.mix.snack_mix_pct ?? data.mix.snack_pct ?? 0;
-  const publicAmt = (k.net_revenue * publicPct) / 100;
-  const privateAmt = (k.net_revenue * privatePct) / 100;
-  const snackAmt = (k.net_revenue * snackMixPct) / 100;
+  const publicAmt = k.public_ticket_revenue ?? 0;
+  const privateAmt = k.private_ticket_revenue ?? 0;
+  const snackAmt = k.snack_revenue ?? 0;
   const maxTrend = Math.max(1, ...(data.trend || []).map((t) => t.revenue));
   const highAlerts = (data.alerts || []).filter((a) => a.level === "high").length;
 

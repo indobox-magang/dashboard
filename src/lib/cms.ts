@@ -1,7 +1,7 @@
+import { DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES, isDeviceOnline } from "./deviceOnline";
 import type { DeviceRow } from "./types";
 
-/** Match indobox-cms/web isDeviceOnline window. */
-const DEVICE_ONLINE_MS = 120_000;
+export { isDeviceOnline, DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES } from "./deviceOnline";
 
 export type CmsSite = {
   id: number;
@@ -113,15 +113,11 @@ export type CmsCatalog = {
   error: string | null;
 };
 
-export function isDeviceOnline(lastHeartbeat?: string | null): boolean {
-  if (!lastHeartbeat) return false;
-  const t = new Date(lastHeartbeat).getTime();
-  if (Number.isNaN(t)) return false;
-  return Date.now() - t < DEVICE_ONLINE_MS;
-}
-
-export function mapDeviceToRow(d: CmsDevice): DeviceRow {
-  const online = isDeviceOnline(d.last_heartbeat_at);
+export function mapDeviceToRow(
+  d: CmsDevice,
+  windowMinutes: number = DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES
+): DeviceRow {
+  const online = isDeviceOnline(d.last_heartbeat_at, windowMinutes);
   const playback = (d.playback_status || "").toLowerCase();
   const hasError =
     Boolean(d.playback_error) || playback === "error" || playback === "stalled";
@@ -143,8 +139,13 @@ export function mapDeviceToRow(d: CmsDevice): DeviceRow {
   };
 }
 
-export function deviceHealth(devices: CmsDevice[]) {
-  const onlineN = devices.filter((d) => isDeviceOnline(d.last_heartbeat_at)).length;
+export function deviceHealth(
+  devices: CmsDevice[],
+  windowMinutes: number = DEFAULT_DEVICE_ONLINE_WINDOW_MINUTES
+) {
+  const onlineN = devices.filter((d) =>
+    isDeviceOnline(d.last_heartbeat_at, windowMinutes)
+  ).length;
   const total = devices.length;
   const offline = total - onlineN;
   const onlinePct = total > 0 ? (100 * onlineN) / total : 0;

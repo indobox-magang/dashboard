@@ -66,7 +66,7 @@ export type DeviceRow = {
   id: number;
   name: string;
   site: string;
-  /** Heartbeat within ~120s. */
+  /** Heartbeat within Settings `device_online_window_minutes`. */
   online: boolean;
   last_heartbeat_at?: string | null;
   playback_status?: string;
@@ -82,6 +82,7 @@ export type DeviceRow = {
 export type Heatmap = {
   days: string[];
   slots: string[];
+  /** Occupancy % as `cells[dayIndex][slotIndex]` (CMS `dashHeat`). */
   cells: number[][];
 };
 

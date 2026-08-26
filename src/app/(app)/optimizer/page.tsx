@@ -6,7 +6,7 @@ import { Empty, Panel } from "@/components/Leaderboard";
 import { useDashboard } from "@/hooks/useDashboardSummary";
 import { fmtIDR, fmtPct, genreClass, heatClass } from "@/lib/format";
 
-const GENRE_SLOTS = ["10:30", "13:00", "16:00", "19:00", "21:30"];
+const CMS_OCCUPANCY_SLOTS = ["10:00", "13:00", "16:00", "19:00", "22:00"];
 
 export default function OptimizerPage() {
   const { data, loading, error, alerts, cms } = useDashboard();
@@ -15,6 +15,7 @@ export default function OptimizerPage() {
   if (!data) return <LoadingState />;
 
   const heat = data.heat || { days: [], slots: [], cells: [] };
+  const genreSlots = heat.slots?.length ? heat.slots : CMS_OCCUPANCY_SLOTS;
   const genres = data.genres || [];
   const insightAlerts = alerts
     .filter((a) => /showtime|okupansi|Under-utilised|Permintaan/i.test(a.title + a.detail))
@@ -67,15 +68,18 @@ export default function OptimizerPage() {
               {heat.slots.map((slot, si) => (
                 <div key={slot} className="contents">
                   <span className="text-[var(--muted)]">{slot}</span>
-                  {(heat.cells[si] || []).map((v, di) => (
-                    <button
-                      key={`${slot}-${di}`}
-                      type="button"
-                      className={`min-h-9 rounded-[var(--radius)] border-0 font-semibold ${heatClass(v)}`}
-                    >
-                      {Math.round(v)}%
-                    </button>
-                  ))}
+                  {heat.days.map((day, di) => {
+                    const v = heat.cells[di]?.[si] ?? 0;
+                    return (
+                      <button
+                        key={`${day}-${slot}`}
+                        type="button"
+                        className={`min-h-9 rounded-[var(--radius)] border-0 font-semibold ${heatClass(v)}`}
+                      >
+                        {Math.round(v)}%
+                      </button>
+                    );
+                  })}
                 </div>
               ))}
             </div>
@@ -116,10 +120,10 @@ export default function OptimizerPage() {
             <>
               <div
                 className="grid items-center gap-1.5 text-[11px]"
-                style={{ gridTemplateColumns: `88px repeat(5, 1fr)` }}
+                style={{ gridTemplateColumns: `88px repeat(${genreSlots.length}, 1fr)` }}
               >
                 <span />
-                {GENRE_SLOTS.map((s) => (
+                {genreSlots.map((s) => (
                   <span key={s} className="text-center text-[var(--muted)]">
                     {s}
                   </span>

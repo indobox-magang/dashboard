@@ -25,11 +25,15 @@ export function Sidebar() {
         </span>
         indobox
       </div>
-      <div className="mx-2 mb-2 mt-6 text-[10px] font-bold tracking-[0.14em] text-slate-500">
+      <div className="mx-2 mb-2 mt-6 text-[10px] font-bold tracking-[0.14em] text-[var(--label)]">
         DASHBOARD
       </div>
       {NAV.map((item) => {
-        const active = pathname === item.href;
+        const active =
+          pathname === item.href ||
+          (item.href === "/command" && pathname.startsWith("/branches/")) ||
+          (item.href === "/operations" && pathname.startsWith("/devices/")) ||
+          (item.href === "/cms" && pathname.startsWith("/bookings/"));
         return (
           <Link
             key={item.href}
@@ -44,7 +48,7 @@ export function Sidebar() {
           </Link>
         );
       })}
-      <div className="mx-2 mb-2 mt-6 text-[10px] font-bold tracking-[0.14em] text-slate-500">
+      <div className="mx-2 mb-2 mt-6 text-[10px] font-bold tracking-[0.14em] text-[var(--label)]">
         PENGATURAN
       </div>
       <Link

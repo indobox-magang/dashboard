@@ -21,20 +21,14 @@ export default function OptimizerPage() {
     .slice(0, 3);
 
   return (
-    <div>
+    <div className="section-stack">
       <PageHead
         title="Optimizer Showtime"
         subtitle="Pola okupansi dari cms.shows + kursi terjual."
       />
       {error ? <ErrorState message={error} /> : null}
-      <div className="notice">
-        ℹ{" "}
-        <span>
-          Keputusan dihitung dari jadwal dan booking di <b>indobox-cms</b>.
-        </span>
-      </div>
 
-      <div className="grid grid-cols-[1.15fr_0.85fr] gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-[1.15fr_0.85fr] gap-5 max-[1100px]:grid-cols-1">
         <Panel>
           <h2 className="m-0 text-base text-white">Heatmap okupansi</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">Hari × slot waktu</p>
@@ -91,7 +85,7 @@ export default function OptimizerPage() {
         </Panel>
       </div>
 
-      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 max-[1100px]:grid-cols-1">
         <Panel>
           <h2 className="m-0 text-base text-white">Heatmap genre × slot waktu</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">

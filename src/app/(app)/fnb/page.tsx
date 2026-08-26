@@ -21,24 +21,22 @@ export default function FnbPage() {
     null
   );
   const summary = [
-    ["Pendapatan F&B", fmtIDR(f.revenue, true), fmtDelta(f.deltas?.revenue_pct)],
-    ["Attach rate", fmtPct(f.attach_pct), fmtDelta(f.deltas?.attach_pts, true)],
-    ["Basket rata-rata pembeli", fmtIDR(f.basket), fmtDelta(f.deltas?.basket_pct)],
+    ["Pendapatan F&B", fmtIDR(f.revenue, true), fmtDelta(f.deltas?.revenue_pct, false, true)],
+    ["Attach rate", fmtPct(f.attach_pct), fmtDelta(f.deltas?.attach_pts, true, true)],
+    ["Basket rata-rata pembeli", fmtIDR(f.basket), fmtDelta(f.deltas?.basket_pct, false, true)],
   ] as const;
 
   return (
-    <div>
+    <div className="section-stack">
       <PageHead
         title="F&B Detail"
         subtitle="Snack dari booking app (booking_snacks). Vending machine (Belum ada di cms)."
       />
       {error ? <ErrorState message={error} /> : null}
-      <div className="mb-4 grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
+      <div className="grid grid-cols-3 gap-3 max-[720px]:grid-cols-1">
         {summary.map((s) => (
           <div key={s[0]} className="health-tile">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {s[0]}
-            </span>
+            <span className="kpi-label">{s[0]}</span>
             <b className="mt-1.5 block text-2xl text-white">{s[1]}</b>
             <span className={`text-xs font-bold ${s[2].down ? "down" : "up"}`}>{s[2].text}</span>
           </div>
@@ -93,16 +91,16 @@ export default function FnbPage() {
               <table className="mt-5 w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)]">
                       Produk
                     </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                       Unit terjual
                     </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                       Pendapatan
                     </th>
-                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500 max-[720px]:hidden">
+                    <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)] max-[720px]:hidden">
                       Pangsa
                     </th>
                   </tr>
@@ -173,7 +171,7 @@ export default function FnbPage() {
         </Panel>
       </div>
 
-      <div className="mt-4 grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 max-[1100px]:grid-cols-1">
         <Panel>
           <h2 className="m-0 text-base text-white">Waktu pembelian</h2>
           <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">

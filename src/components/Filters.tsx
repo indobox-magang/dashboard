@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboard } from "@/hooks/useDashboardSummary";
+import { isSeedData } from "@/lib/dashboardMeta";
 import type { PeriodKey } from "@/lib/types";
 
 export function Filters({ show = true }: { show?: boolean }) {
@@ -13,7 +14,7 @@ export function Filters({ show = true }: { show?: boolean }) {
         <option value="">Semua Cabang</option>
         {(data?.sites || []).map((s) => (
           <option key={s.id} value={s.id}>
-            {s.name}
+            {s.name}{isSeedData(s.code, s.name) ? " [SEED]" : ""}
           </option>
         ))}
       </select>

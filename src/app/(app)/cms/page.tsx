@@ -1,10 +1,20 @@
 "use client";
 
+import Link from "next/link";
 import { ErrorState, LoadingState } from "@/components/Alerts";
+import { BookingFunnel } from "@/components/BookingFunnel";
+import { SeedBadge } from "@/components/DataBadges";
 import { PageHead } from "@/components/Filters";
-import { Empty, Panel } from "@/components/Leaderboard";
+import { Empty, MetricTile, Panel, PanelHead } from "@/components/Leaderboard";
+import {
+  AgentFleetPanel,
+  CheckInPanel,
+  ShowStatusPanel,
+  StorageBreakdownPanel,
+} from "@/components/OpsPanels";
 import { formatBytes, isDeviceOnline, useCmsSnapshot } from "@/hooks/useCmsSnapshot";
 import { fmtIDR } from "@/lib/format";
+import { verifiedFeatureCount } from "@/lib/opsMetrics";
 
 function statusTone(status: string) {
   if (status === "paid" || status === "used") return "badge-ok";
@@ -23,7 +33,11 @@ export default function CmsPage() {
   const activePromos = data.promos.filter((p) => p.active === 1);
   const activeBanners = data.banners.filter((b) => b.active === 1);
   const availableSnacks = data.snacks.filter((s) => s.available === 1);
-  const upcomingShows = [...data.shows]
+  const verifiedFilms = data.assets.filter(
+    (a) => a.kind === "feature" && ["verified", "encrypting", "verifying"].includes(a.status)
+  );
+  const scheduledShows = data.shows.filter((s) => s.status === "scheduled");
+  const upcomingShows = [...scheduledShows]
     .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime())
     .slice(0, 8);
   const recentBookings = data.bookings.slice(0, 10);
@@ -31,37 +45,18 @@ export default function CmsPage() {
     .sort((a, b) => (b.booking_count || 0) - (a.booking_count || 0))
     .slice(0, 8);
 
-  const kpis = [
-    { label: "Branches", value: String(data.sites.length) },
-    { label: "Screens", value: String(data.screens.length) },
-    {
-      label: "Devices",
-      value: String(data.devices.length),
-      sub: data.devices.length ? `${online} online` : undefined,
-    },
-    { label: "Film verified", value: String(data.assets.length) },
-    { label: "Shows scheduled", value: String(data.shows.length) },
-    { label: "Bookings", value: String(data.bookings.length) },
-    { label: "Promo aktif", value: String(activePromos.length) },
-    {
-      label: "Storage objects",
-      value: String(data.storage.total_count || 0),
-      sub: formatBytes(data.storage.total_size_bytes || 0),
-    },
-  ];
-
   return (
-    <div>
+    <div className="section-stack">
       <PageHead
         title="Data CMS"
-        subtitle="Ringkasan entitas yang sudah ada di indobox-cms (sites, jadwal, booking, promo, dll)."
+        subtitle="Inventori live: cabang, jadwal, booking, media, dan promo."
         controls={false}
       />
       {error ? <ErrorState message={error} /> : null}
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="m-0 text-xs text-[var(--muted)]">
-          Diambil langsung dari endpoint admin CMS ·{" "}
+          Endpoint admin CMS ·{" "}
           {new Date(data.fetched_at).toLocaleTimeString("id-ID", {
             hour: "2-digit",
             minute: "2-digit",
@@ -74,50 +69,67 @@ export default function CmsPage() {
       </div>
 
       {!data.sites.length ? (
-        <div className="notice mb-5">
-          ℹ{" "}
+        <div className="notice">
           <span>
-            Belum ada cabang di CMS. Buat site/screen/show di{" "}
-            <b>indobox-cms</b> (menu Branches / Schedules) agar dashboard bisnis terisi.
+            Belum ada cabang di CMS. Buat site/screen/show di <b>indobox-cms</b> agar dashboard
+            bisnis terisi.
           </span>
         </div>
       ) : null}
 
-      <div className="mb-4 grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-2">
-        {kpis.map((k) => (
-          <div key={k.label} className="health-tile">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              {k.label}
-            </span>
-            <b className="mt-1.5 block text-2xl text-white">{k.value}</b>
-            {k.sub ? <span className="text-xs font-semibold text-[var(--success)]">{k.sub}</span> : null}
-          </div>
-        ))}
+      <div className="grid grid-cols-4 gap-3 max-[1100px]:grid-cols-2 max-[720px]:grid-cols-2">
+        <MetricTile label="Cabang" value={String(data.sites.length)} hint={`${data.screens.length} layar`} />
+        <MetricTile
+          label="Devices"
+          value={String(data.devices.length)}
+          hint={data.devices.length ? `${online} online` : undefined}
+          tone="ok"
+        />
+        <MetricTile label="Film verified" value={String(verifiedFeatureCount(data.assets))} />
+        <MetricTile label="Show scheduled" value={String(scheduledShows.length)} />
+        <MetricTile label="Bookings" value={String(data.bookings.length)} hint="Max 200 terbaru" />
+        <MetricTile label="Promo aktif" value={String(activePromos.length)} />
+        <MetricTile
+          label="Storage"
+          value={formatBytes(data.storage.total_size_bytes || 0)}
+          hint={`${data.storage.total_count || 0} objek`}
+        />
+        <MetricTile label="Snack available" value={`${availableSnacks.length}/${data.snacks.length}`} />
       </div>
 
-      <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-2 gap-5 max-[1100px]:grid-cols-1">
+        <CheckInPanel bookings={data.bookings} />
         <Panel>
-          <h2 className="m-0 text-base text-white">Booking terbaru</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Dari /v1/admin/bookings
-          </p>
+          <PanelHead title="Booking funnel" subtitle="Lifecycle 200 booking terbaru" />
+          <BookingFunnel bookings={data.bookings} compact />
+        </Panel>
+      </div>
+
+      <div className="grid grid-cols-2 gap-5 max-[1100px]:grid-cols-1">
+        <ShowStatusPanel shows={data.shows} />
+        <StorageBreakdownPanel storage={data.storage} assets={data.assets} />
+      </div>
+
+      <div className="grid grid-cols-[1.2fr_0.8fr] gap-5 max-[1100px]:grid-cols-1">
+        <Panel>
+          <PanelHead title="Booking terbaru" subtitle="Klik kode untuk detail" />
           {recentBookings.length ? (
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Kode
                   </th>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Film
                   </th>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500 max-[720px]:hidden">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)] max-[720px]:hidden">
                     Kota
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Total
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Status
                   </th>
                 </tr>
@@ -126,7 +138,13 @@ export default function CmsPage() {
                 {recentBookings.map((b) => (
                   <tr key={b.id}>
                     <td className="border-t border-[var(--panel-border)] py-3 font-mono text-xs text-slate-300">
-                      {b.code}
+                      <Link
+                        href={`/bookings/${encodeURIComponent(b.id)}`}
+                        className="inline-flex items-center gap-1.5 text-inherit no-underline hover:text-white"
+                      >
+                        {b.code}
+                        <SeedBadge values={[b.id, b.code, b.user_name, b.movie_title]} />
+                      </Link>
                     </td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
                       <div>{b.movie_title || "—"}</div>
@@ -151,10 +169,7 @@ export default function CmsPage() {
         </Panel>
 
         <Panel>
-          <h2 className="m-0 text-base text-white">Jadwal show (scheduled)</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Dari /v1/admin/shows
-          </p>
+          <PanelHead title="Jadwal scheduled" subtitle="Show yang masih menunggu tayang" />
           {upcomingShows.length ? (
             <div className="grid gap-2.5">
               {upcomingShows.map((s) => (
@@ -164,8 +179,7 @@ export default function CmsPage() {
                 >
                   <b className="block text-white">{s.title}</b>
                   <small className="text-[var(--muted)]">
-                    {s.site_name} · {s.screen_name} ·{" "}
-                    {new Date(s.starts_at).toLocaleString("id-ID")}
+                    {s.site_name} · {s.screen_name} · {new Date(s.starts_at).toLocaleString("id-ID")}
                     {s.price != null ? ` · ${fmtIDR(s.price)}` : ""}
                   </small>
                 </div>
@@ -177,12 +191,9 @@ export default function CmsPage() {
         </Panel>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-3 gap-5 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base text-white">Promo aktif</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            {activePromos.length}/{data.promos.length} aktif
-          </p>
+          <PanelHead title="Promo aktif" subtitle={`${activePromos.length}/${data.promos.length} aktif`} />
           {activePromos.length ? (
             <div className="grid gap-2.5">
               {activePromos.slice(0, 8).map((p) => (
@@ -207,21 +218,21 @@ export default function CmsPage() {
         </Panel>
 
         <Panel>
-          <h2 className="m-0 text-base text-white">Snack katalog</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            {availableSnacks.length}/{data.snacks.length} available
-          </p>
+          <PanelHead
+            title="Snack katalog"
+            subtitle={`${availableSnacks.length}/${data.snacks.length} available`}
+          />
           {data.snacks.length ? (
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Nama
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Harga
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Status
                   </th>
                 </tr>
@@ -230,7 +241,10 @@ export default function CmsPage() {
                 {data.snacks.slice(0, 10).map((s) => (
                   <tr key={s.id}>
                     <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
-                      {s.name}
+                      <span className="inline-flex items-center gap-1.5">
+                        {s.name}
+                        <SeedBadge values={[s.id, s.name]} />
+                      </span>
                     </td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-right text-white">
                       {fmtIDR(s.price)}
@@ -249,80 +263,26 @@ export default function CmsPage() {
           )}
         </Panel>
 
-        <Panel>
-          <h2 className="m-0 text-base text-white">Device & media</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Devices · assets · banners · staff
-          </p>
-          <div className="grid gap-2 text-sm text-slate-200">
-            <div className="flex justify-between border-b border-[var(--panel-border)] py-2">
-              <span>Device online</span>
-              <b className="text-white">
-                {online}/{data.devices.length}
-              </b>
-            </div>
-            <div className="flex justify-between border-b border-[var(--panel-border)] py-2">
-              <span>Banner aktif</span>
-              <b className="text-white">
-                {activeBanners.length}/{data.banners.length}
-              </b>
-            </div>
-            <div className="flex justify-between border-b border-[var(--panel-border)] py-2">
-              <span>Staff booking</span>
-              <b className="text-white">{data.staff.length}</b>
-            </div>
-            <div className="flex justify-between border-b border-[var(--panel-border)] py-2">
-              <span>Customers</span>
-              <b className="text-white">{data.customers.length}</b>
-            </div>
-            <div className="flex justify-between py-2">
-              <span>Storage</span>
-              <b className="text-white">{formatBytes(data.storage.total_size_bytes || 0)}</b>
-            </div>
-          </div>
-          {data.devices.length ? (
-            <div className="mt-4 grid gap-2">
-              {data.devices.slice(0, 5).map((d) => {
-                const on = isDeviceOnline(d.last_heartbeat_at);
-                return (
-                  <div
-                    key={d.id}
-                    className="flex items-center justify-between rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 px-3 py-2"
-                  >
-                    <div>
-                      <b className="block text-sm text-white">{d.name}</b>
-                      <small className="text-[var(--muted)]">{d.site}</small>
-                    </div>
-                    <span className={`badge ${on ? "badge-ok" : "badge-warn"}`}>
-                      {on ? "Online" : "Offline"}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-        </Panel>
+        <AgentFleetPanel devices={data.devices} />
       </div>
 
-      <div className="mt-4 grid grid-cols-[1fr_1fr] gap-4 max-[1100px]:grid-cols-1">
+      <div className="grid grid-cols-[1fr_1fr] gap-5 max-[1100px]:grid-cols-1">
         <Panel>
-          <h2 className="m-0 text-base text-white">Film (asset feature verified)</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Dari /v1/admin/assets
-          </p>
-          {data.assets.length ? (
+          <PanelHead title="Film verified" subtitle="Asset feature yang sudah verified / encrypting" />
+          {verifiedFilms.length ? (
             <div className="grid gap-2.5">
-              {data.assets.slice(0, 10).map((a) => (
+              {verifiedFilms.slice(0, 10).map((a) => (
                 <div
                   key={a.id}
                   className="rounded-[var(--radius)] border border-[var(--panel-border)] bg-black/15 p-3"
                 >
-                  <b className="block text-white">{a.title}</b>
+                  <b className="flex items-center gap-1.5 text-white">
+                    {a.title}
+                    <SeedBadge values={[a.title]} />
+                  </b>
                   <small className="text-[var(--muted)]">
                     {a.genre || "Tanpa genre"} · {a.status}
-                    {a.duration_ms
-                      ? ` · ${Math.round(a.duration_ms / 60000)} mnt`
-                      : ""}
+                    {a.duration_ms ? ` · ${Math.round(a.duration_ms / 60000)} mnt` : ""}
                   </small>
                 </div>
               ))}
@@ -333,21 +293,18 @@ export default function CmsPage() {
         </Panel>
 
         <Panel>
-          <h2 className="m-0 text-base text-white">Customer aktif</h2>
-          <p className="mt-1 mb-4 text-xs font-medium text-[var(--muted)]">
-            Dari /v1/admin/booking-users
-          </p>
+          <PanelHead title="Customer aktif" subtitle="Dari /v1/admin/booking-users" />
           {topCustomers.length ? (
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
-                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-left text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Nama
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Tier
                   </th>
-                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-slate-500">
+                  <th className="pb-2.5 text-right text-[11px] uppercase tracking-wide text-[var(--label)]">
                     Booking
                   </th>
                 </tr>
@@ -355,9 +312,7 @@ export default function CmsPage() {
               <tbody>
                 {topCustomers.map((c) => (
                   <tr key={c.id}>
-                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">
-                      {c.name}
-                    </td>
+                    <td className="border-t border-[var(--panel-border)] py-3 text-slate-200">{c.name}</td>
                     <td className="border-t border-[var(--panel-border)] py-3 text-right text-slate-300">
                       {c.tier || "—"}
                     </td>
@@ -371,6 +326,18 @@ export default function CmsPage() {
           ) : (
             <Empty>Belum ada customer.</Empty>
           )}
+          <div className="mt-4 grid gap-2 text-sm text-slate-200">
+            <div className="flex justify-between border-t border-[var(--panel-border)] pt-3">
+              <span>Banner aktif</span>
+              <b className="text-white">
+                {activeBanners.length}/{data.banners.length}
+              </b>
+            </div>
+            <div className="flex justify-between">
+              <span>Staff booking</span>
+              <b className="text-white">{data.staff.length}</b>
+            </div>
+          </div>
         </Panel>
       </div>
     </div>

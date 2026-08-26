@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { toast } from "@/components/Toast";
 import { NotInCms } from "@/components/NotInCms";
 import { useDashboard } from "@/hooks/useDashboardSummary";
@@ -9,9 +10,11 @@ import { Empty } from "./Leaderboard";
 export function AlertList({
   alerts,
   onDismiss,
+  hrefFor,
 }: {
   alerts: Alert[];
   onDismiss: (index: number) => void;
+  hrefFor?: (alert: Alert) => string;
 }) {
   if (!alerts.length) {
     return (
@@ -46,16 +49,27 @@ export function AlertList({
               {x.level === "high" ? "PRIORITAS TINGGI" : "PRIORITAS MENENGAH"}
             </span>
           </div>
-          <button
-            type="button"
-            className="btn-ghost self-start text-[11px] text-[var(--accent)]"
-            onClick={() => {
-              onDismiss(i);
-              toast(`Alert “${x.title}” telah diakui.`);
-            }}
-          >
-            {x.action}
-          </button>
+          <div className="flex flex-col items-end gap-1.5">
+            {hrefFor ? (
+              <Link
+                href={hrefFor(x)}
+                className="btn-ghost text-[11px] text-[var(--accent)] no-underline"
+              >
+                Lihat detail
+              </Link>
+            ) : null}
+            <button
+              type="button"
+              className="btn-ghost text-[11px]"
+              title={x.action}
+              onClick={() => {
+                onDismiss(i);
+                toast(`Alert “${x.title}” diakui untuk sesi browser ini.`);
+              }}
+            >
+              Akui lokal
+            </button>
+          </div>
         </div>
       ))}
     </>
@@ -63,21 +77,32 @@ export function AlertList({
 }
 
 export function ActionNeededPanel() {
-  const { alerts, dismissAlert } = useDashboard();
+  const { alerts, dismissAlert, data } = useDashboard();
+  const hrefFor = (alert: Alert) => {
+    const haystack = `${alert.title} ${alert.detail}`.toLowerCase();
+    const device = data?.devices.find((item) => haystack.includes(item.name.toLowerCase()));
+    if (device) return `/devices/${device.id}`;
+    const branch = data?.branches.find((item) => haystack.includes(item.name.toLowerCase()));
+    if (branch) return `/branches/${branch.site_id}`;
+    if (haystack.includes("device") || haystack.includes("player")) return "/operations";
+    if (haystack.includes("snack") || haystack.includes("f&b")) return "/fnb";
+    if (haystack.includes("film") || haystack.includes("okupansi")) return "/optimizer";
+    return "/command";
+  };
   return (
-    <article className="card mt-4 overflow-hidden p-0">
+    <article className="card overflow-hidden p-0">
       <div className="flex items-start justify-between gap-4 px-5 pt-5 pb-3">
         <div>
-          <h2 className="m-0 text-base text-white">Action Needed</h2>
-          <p className="mt-1 mb-0 text-xs font-medium text-[var(--muted)]">
-            Alert dihitung dari data CMS · acknowledgement lokal <NotInCms />
+          <h2 className="m-0 text-[15px] font-semibold text-white">Action Needed</h2>
+          <p className="mt-1 mb-0 text-xs leading-relaxed text-[var(--muted)]">
+            Sinyal CMS · acknowledgement hanya di browser ini <NotInCms />
           </p>
         </div>
         <span className="text-xs font-extrabold text-[var(--danger)]">
           {alerts.length} alert terbuka
         </span>
       </div>
-      <AlertList alerts={alerts} onDismiss={dismissAlert} />
+      <AlertList alerts={alerts} onDismiss={dismissAlert} hrefFor={hrefFor} />
     </article>
   );
 }
@@ -88,7 +113,7 @@ export function LoadingState() {
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <div className="notice mb-5" role="alert">
+    <div className="notice" role="alert">
       ⚠ <span>{message}</span>
     </div>
   );

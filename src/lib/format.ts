@@ -21,17 +21,21 @@ export function fmtPct(v: number, digits = 1): string {
 
 export function fmtDelta(
   pct: number | null | undefined,
-  pts = false
+  pts = false,
+  compact = false
 ): { text: string; down: boolean } {
   if (pct == null || Number.isNaN(Number(pct))) {
-    return { text: "— vs periode lalu", down: false };
+    return { text: compact ? "—" : "— vs periode lalu", down: false };
   }
   const n = Number(pct);
   const arrow = n > 0 ? "↑" : n < 0 ? "↓" : "→";
   const body = pts
     ? Math.abs(n).toFixed(1).replace(".", ",") + " pts"
     : Math.abs(n).toFixed(1).replace(".", ",") + "%";
-  return { text: `${arrow} ${body} vs periode lalu`, down: n < 0 };
+  return {
+    text: compact ? `${arrow} ${body}` : `${arrow} ${body} vs periode lalu`,
+    down: n < 0,
+  };
 }
 
 export function relativeTime(iso: string): string {

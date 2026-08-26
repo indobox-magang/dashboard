@@ -80,6 +80,31 @@ async function soft<T>(promise: Promise<T>, fallback: T): Promise<T> {
   }
 }
 
+function mapShow(s: ShowRow, siteName?: string): ShowRow {
+  return {
+    id: s.id,
+    screen_id: s.screen_id,
+    screen_name: s.screen_name,
+    site_id: s.site_id,
+    site_name: s.site_name || siteName || "",
+    starts_at: s.starts_at,
+    ends_at: s.ends_at,
+    title: s.title,
+    status: s.status,
+    price: s.price,
+    show_no: s.show_no,
+    booking_enabled: s.booking_enabled,
+    is_playing: s.is_playing,
+  };
+}
+
+function flattenShows(res: { items?: ShowRow[]; groups?: ScheduleGroup[] }): ShowRow[] {
+  const fromGroups =
+    res.groups?.flatMap((g) => (g.shows || []).map((s) => mapShow(s, g.site_name))) || [];
+  if (fromGroups.length) return fromGroups;
+  return (res.items || []).map((s) => mapShow(s));
+}
+
 /** Parallel read of existing CMS admin endpoints (no new CMS APIs). */
 export async function fetchCmsSnapshot(): Promise<CmsSnapshot> {
   const [
@@ -87,7 +112,9 @@ export async function fetchCmsSnapshot(): Promise<CmsSnapshot> {
     screensRes,
     devicesRes,
     assetsRes,
-    showsRes,
+    scheduledShows,
+    doneShows,
+    cancelledShows,
     bookings,
     snacks,
     promos,
@@ -99,12 +126,12 @@ export async function fetchCmsSnapshot(): Promise<CmsSnapshot> {
     soft(api<{ items: SiteOption[] }>("/v1/admin/sites"), { items: [] }),
     soft(api<{ items: ScreenRow[] }>("/v1/admin/screens"), { items: [] }),
     soft(api<{ devices: DeviceAdminRow[] }>("/v1/admin/devices"), { devices: [] }),
-    soft(api<{ items: AssetRow[] }>("/v1/admin/assets?kind=feature&status=verified"), {
-      items: [],
-    }),
+    soft(api<{ items: AssetRow[] }>("/v1/admin/assets"), { items: [] }),
     soft(api<{ items: ShowRow[]; groups?: ScheduleGroup[] }>(
       "/v1/admin/shows?status=scheduled&view=grouped"
     ), { items: [] }),
+    soft(api<{ items: ShowRow[] }>("/v1/admin/shows?status=done"), { items: [] }),
+    soft(api<{ items: ShowRow[] }>("/v1/admin/shows?status=cancelled"), { items: [] }),
     soft(api<BookingRow[]>("/v1/admin/bookings"), []),
     soft(api<SnackRow[]>("/v1/admin/snacks"), []),
     soft(api<PromoRow[]>("/v1/admin/promos"), []),
@@ -118,24 +145,15 @@ export async function fetchCmsSnapshot(): Promise<CmsSnapshot> {
     }),
   ]);
 
-  const showsFromGroups =
-    showsRes.groups?.flatMap((g) =>
-      (g.shows || []).map((s) => ({
-        id: s.id,
-        screen_id: s.screen_id,
-        screen_name: s.screen_name,
-        site_name: s.site_name || g.site_name,
-        starts_at: s.starts_at,
-        ends_at: s.ends_at,
-        title: s.title,
-        status: s.status,
-        price: s.price,
-        show_no: s.show_no,
-        booking_enabled: s.booking_enabled,
-      }))
-    ) || [];
-
-  const shows = showsFromGroups.length ? showsFromGroups : showsRes.items || [];
+  const showsById = new Map<number, ShowRow>();
+  for (const show of [
+    ...flattenShows(scheduledShows),
+    ...flattenShows(doneShows),
+    ...flattenShows(cancelledShows),
+  ]) {
+    showsById.set(show.id, show);
+  }
+  const shows = [...showsById.values()];
 
   return {
     sites: sitesRes.items || [],

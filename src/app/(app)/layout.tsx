@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { ToastHost } from "@/components/Toast";
+import { DataFreshnessBadge } from "@/components/DataBadges";
 import { DashboardProvider, useDashboard } from "@/hooks/useDashboardSummary";
 import { hasToken } from "@/lib/auth";
 
@@ -40,21 +41,28 @@ function AppChrome({ children }: { children: React.ReactNode }) {
   const time = asOf
     ? asOf.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
     : "—";
+  const crumb =
+    CRUMBS[pathname] ||
+    (pathname.startsWith("/branches/")
+      ? "Dashboard / Detail Cabang"
+      : pathname.startsWith("/devices/")
+        ? "Dashboard / Detail Device"
+        : pathname.startsWith("/bookings/")
+          ? "Dashboard / Detail Booking"
+          : "Dashboard");
 
   return (
     <div className="grid min-h-screen grid-cols-[238px_1fr] bg-[var(--bg)] max-[720px]:block">
       <Sidebar />
-      <main className="mx-auto w-full max-w-[1450px] px-[clamp(18px,4vw,52px)] py-7 pb-12 max-[720px]:px-3.5">
-        <div className="mb-8 flex items-center justify-between gap-4">
-          <span className="text-xs text-[var(--muted)]">{CRUMBS[pathname] || "Dashboard"}</span>
-          <span
-            className={`flex items-center gap-1.5 text-xs font-bold max-[720px]:hidden ${
-              loading ? "text-[var(--accent)]" : "text-[var(--success)]"
-            }`}
-          >
-            <i className="inline-block h-2 w-2 rounded-full bg-current" />
-            {loading ? "Memuat…" : `Data CMS · ${time} WIB`}
-          </span>
+      <main className="mx-auto w-full max-w-[1450px] px-[clamp(18px,4vw,52px)] py-6 pb-12 max-[720px]:px-3.5">
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <span className="text-xs text-[var(--muted)]">{crumb}</span>
+          <div className="flex items-center gap-2 max-[720px]:hidden">
+            <span className={`text-xs font-bold ${loading ? "text-[var(--accent)]" : "text-slate-300"}`}>
+              {loading ? "Memuat…" : `Ringkasan CMS · ${time} WIB`}
+            </span>
+            {!loading ? <DataFreshnessBadge timestamp={data?.as_of} /> : null}
+          </div>
         </div>
         {children}
       </main>

@@ -2,6 +2,10 @@ export type SiteOption = {
   id: number;
   code: string;
   name: string;
+  city?: string;
+  address?: string;
+  timezone?: string;
+  active?: boolean;
 };
 
 export type Deltas = {
@@ -158,9 +162,17 @@ export type DeviceAdminRow = {
   site: string;
   name: string;
   status?: string;
+  hostname?: string;
+  screens?: number[];
   last_heartbeat_at?: string;
   playback_status?: string;
   playback_error?: string;
+  current_show_id?: number;
+  current_show_title?: string;
+  current_asset_id?: number;
+  agent_version?: string;
+  agent_git_sha?: string;
+  agent_updated_at?: string;
 };
 
 export type AssetRow = {
@@ -177,6 +189,7 @@ export type ShowRow = {
   id: number;
   screen_id: number;
   screen_name: string;
+  site_id?: number;
   site_name: string;
   starts_at: string;
   ends_at?: string;
@@ -185,6 +198,7 @@ export type ShowRow = {
   price?: number;
   show_no?: number;
   booking_enabled?: boolean;
+  is_playing?: boolean;
 };
 
 export type ScheduleGroup = {
@@ -205,6 +219,18 @@ export type BookingRow = {
   movie_title: string;
   start_time: string;
   city: string;
+};
+
+export type BookingStatusCount = {
+  status: "pending" | "paid" | "used" | "expired" | "cancelled";
+  count: number;
+};
+
+export type BookingFunnelMetrics = {
+  total: number;
+  converted: number;
+  conversion_pct: number;
+  stages: BookingStatusCount[];
 };
 
 export type SnackRow = {
